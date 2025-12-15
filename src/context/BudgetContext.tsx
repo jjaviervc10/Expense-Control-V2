@@ -1,39 +1,45 @@
-import { useReducer, createContext } from "react"
-import type { Dispatch, ReactNode } from "react"
-import { budgetReducer, initialState, type BudgetActions, type BudgetState } from "../reducers/budget-reducer"
-import { useMemo } from "react"
+import { createContext, useReducer, useMemo } from "react"
+import { budgetReducer, initialState } from "../reducers/budget-reducer"
+import type { BudgetActions, BudgetState } from "../reducers/budget-reducer"
+import type { Expense } from "../types"
 
 type BudgetContextProps = {
-    state: BudgetState
-    dispatch: Dispatch<BudgetActions>,
-    totalExpenses:number,
-    remainingBudget: number
+  state: BudgetState
+  dispatch: React.Dispatch<BudgetActions>
+  filteredExpenses: Expense[]
+  totalExpenses: number
+  remainingBudget: number
 }
 
-type BudgetProviderProps = {
-    children: ReactNode
-}
-export const BudgetContext = createContext<BudgetContextProps>({} as BudgetContextProps)
+export const BudgetContext = createContext({} as BudgetContextProps)
 
-export const BudgetProvider = ({children}: BudgetProviderProps) =>{
-    const [state, dispatch] = useReducer(budgetReducer, initialState)
+export function BudgetProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(budgetReducer, initialState)
 
-    const totalExpenses = useMemo(() => state.expenses.reduce((total, expense)=> expense.amount + total,0 ), [state.expenses])
-          
-     const remainingBudget = state.budget - totalExpenses
-      
+  /* SOLO GASTOS DEL RANGO ACTUAL */
+ 
+
+const filteredExpenses = useMemo(
+  () => state.expenses.filter(
+    expense => expense.range === state.currentRange
+  ),
+  [state.expenses, state.currentRange]
+);
+
+const totalExpenses = useMemo(
+  () => filteredExpenses.reduce((acc, e) => acc + e.amount, 0),
+  [filteredExpenses]
+);
+
+const remainingBudget =
+  state.budgets[state.currentRange] - totalExpenses;
+
     
-  
-    return(
-      <BudgetContext.Provider
-         value={{
-            state,
-            dispatch,
-            totalExpenses,
-            remainingBudget
-         }}
-      >
-        {children}
-      </BudgetContext.Provider>
-    )
+  return (
+    <BudgetContext.Provider
+      value={{ state, dispatch, filteredExpenses, totalExpenses, remainingBudget }}
+    >
+      {children}
+    </BudgetContext.Provider>
+  )
 }

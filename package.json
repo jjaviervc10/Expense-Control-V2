@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
+    "@supabase/supabase-js": "^2.86.0",
     "@tailwindcss/vite": "^4.1.17",
     "prop-types": "^15.8.1",
     "react": "^19.2.0",
@@ -19,6 +20,7 @@
     "react-circular-progressbar": "^2.2.0",
     "react-date-picker": "^12.0.1",
     "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.6",
     "react-swipeable-list": "^1.10.0",
     "tailwindcss": "^4.1.17",
     "uuid": "^13.0.0"
@@ -28,6 +30,7 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@types/react-router-dom": "^5.3.3",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react-swc": "^4.2.1",
     "eslint": "^9.39.1",

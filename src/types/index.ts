@@ -1,10 +1,13 @@
+
 export type Expense = {
-    id: string
-    expenseName: string
-    amount: number
-    category: string
-    date: Value
+  id: string
+  expenseName: string
+  amount: number
+  category: string
+  date: Date
+  range: ReportRange        // ✅ CLAVE
 }
+
 
 export type DraftExpense = Omit<Expense, 'id'>
 
@@ -16,3 +19,7 @@ export type Value = ValuePiece | [ValuePiece, ValuePiece];
     name : string
     icon : string
  }
+
+ // 🔹 nuevo
+export type ReportRange = 'diario' | 'semanal' | 'mensual'
+

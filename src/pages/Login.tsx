@@ -1,0 +1,101 @@
+// src/pages/Login.tsx
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+
+export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [correo, setCorreo] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setErrorMsg("");
+
+  try {
+    await login(correo, password);
+
+    // ✅ LEEMOS EL USUARIO ACTUAL
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    // ✅ REDIRECCIÓN SEGÚN ROL
+    if (storedUser.rol === "admin") {
+      navigate("/admin/trial");
+    } else {
+      navigate("/dashboard");
+    }
+
+  } catch (error) {
+    setErrorMsg("Correo o contraseña incorrectos");
+  }
+};
+
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-sm bg-white shadow-lg rounded-xl p-8">
+        <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">
+          Iniciar Sesión
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* EMAIL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              placeholder="usuario@correo.com"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              placeholder="*******"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          {/* ERROR */}
+          {errorMsg && (
+            <p className="text-red-500 text-center text-sm">{errorMsg}</p>
+          )}
+
+          {/* BUTTON */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition"
+          >
+            Ingresar
+          </button>
+        </form>
+
+        {/* REGISTER LINK */}
+        <p className="text-center text-gray-600 text-sm mt-4">
+          ¿No tienes cuenta?{" "}
+          <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+            Crear cuenta
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
