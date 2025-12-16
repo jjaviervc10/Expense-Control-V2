@@ -1,44 +1,88 @@
-import { useEffect } from "react"
-import { useBudget } from "../../hooks/useBudget"
-import BudgetForm from "../../components/BudgetForm"
-import BudgetTracker from "../../components/BudgetTracker"
-import ExpenseList from "../../components/ExpenseList"
-import ExpenseModal from "../../components/ExpenseModal"
-import FilterByCategory from "../../components/FilterByCategory"
+import { useEffect, useState } from "react";
+import { useBudget } from "../../hooks/useBudget";
+import { useNavigate } from "react-router-dom";
+import { ArrowRightOnRectangleIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { logout } from "../../utils/logout";
 
-export default function Diario() {
-  const { state, dispatch } = useBudget()
+import BudgetForm from "../../components/BudgetForm";
+import BudgetTracker from "../../components/BudgetTracker";
+import ExpenseList from "../../components/ExpenseList";
+import ExpenseModal from "../../components/ExpenseModal";
+import FilterByCategory from "../../components/FilterByCategory";
 
- useEffect(() => {
-  dispatch({ type: "set-range", payload: { range: "semanal" } })
-}, [dispatch])
+import { usePresupuestoActivo } from "../../hooks/usePresupuestoActivo";
+import { useAutoLogout } from "../../hooks/useAutoLogout";
 
-const presupuestoActual = state.budgets.semanal
+export default function Semanal() {
+  const { dispatch, state } = useBudget();
+  const navigate = useNavigate();
+  useAutoLogout();
 
+  const [refresh, setRefresh] = useState(0);
+  const [filterCategory, setFilterCategory] = useState(""); // ✅ Estado local para filtrar
+  
+
+  useEffect(() => {
+    dispatch({ type: "set-range", payload: { range: "semanal" } });
+  }, [dispatch]);
+
+  const {
+    montoLimite,
+    loading,
+    error,
+    refetch: refetchPresupuesto,
+  } = usePresupuestoActivo("semanal");
+
+  useEffect(() => {
+    if (state.expenses.some((e) => e.range === "semanal")) {
+      setRefresh((prev) => prev + 1);
+    }
+  }, [state.expenses]);
 
   return (
     <>
+      <button
+        onClick={() => navigate("/dashboard")}
+        className="fixed top-4 left-4 bg-white text-blue-600 p-2 rounded-full shadow-lg border border-blue-500 hover:bg-blue-50 transition z-50"
+        title="Volver al Dashboard"
+      >
+        <ArrowLeftIcon className="h-6 w-6" />
+      </button>
+
       <header className="bg-blue-600 py-8 max-h-72">
         <h1 className="uppercase text-center font-black text-4xl text-white">
           PLANIFICADOR DE GASTOS - SEMANAL
         </h1>
+
+        <button
+          onClick={logout}
+          className="fixed top-4 right-4 bg-red-600 text-white p-3 rounded-full shadow-lg z-50 hover:bg-red-700 transition"
+          title="Cerrar Sesión"
+        >
+          <ArrowRightOnRectangleIcon className="w-6 h-6" />
+        </button>
       </header>
 
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg mt-10 p-10">
-        {/* ✅ SI NO HAY PRESUPUESTO → FORM */}
-        {presupuestoActual === 0 ? (
-          <BudgetForm />
+        {loading ? (
+          <p className="text-center">Cargando...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : montoLimite === null ? (
+          <BudgetForm tipo="semanal" onSuccess={refetchPresupuesto} />
         ) : (
           <>
-            <BudgetTracker />
+           
+            <BudgetTracker tipo="semanal" onResetSuccess={refetchPresupuesto} />
+            
             <main className="max-w-3xl mx-auto py-10">
-              <FilterByCategory />
-              <ExpenseList />
+              <FilterByCategory  onChange={setFilterCategory}/>
+              <ExpenseList tipo="semanal" refresh={refresh} filterCategory={filterCategory}/>
               <ExpenseModal />
             </main>
           </>
         )}
       </div>
     </>
-  )
+  );
 }

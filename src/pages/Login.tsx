@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,29 +10,30 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setErrorMsg("");
+    e.preventDefault();
+    setErrorMsg("");
 
-  try {
-    await login(correo, password);
+    try {
+      await login(correo, password);
 
-    // ✅ LEEMOS EL USUARIO ACTUAL
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    // ✅ REDIRECCIÓN SEGÚN ROL
-    if (storedUser.rol === "admin") {
-      navigate("/admin/trial");
-    } else {
-      navigate("/dashboard");
+      if (storedUser.rol === "admin") {
+        navigate("/admin/trial");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      if (error?.requierePago) {
+        setErrorMsg(
+          `Tu prueba ha expirado. Realiza un depósito o transferencia de $100 al número de tarjeta XXXX-XXXX-XXXX-1234 (CLABE: 012345678901234567) a nombre de Javier para activar tu cuenta.`
+        );
+      } else {
+        setErrorMsg(error.message || "Correo o contraseña incorrectos.");
+      }
     }
-
-  } catch (error) {
-    setErrorMsg("Correo o contraseña incorrectos");
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -43,7 +43,6 @@ export default function Login() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* EMAIL */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -74,12 +73,14 @@ export default function Login() {
             />
           </div>
 
-          {/* ERROR */}
+          {/* ERROR MESSAGE */}
           {errorMsg && (
-            <p className="text-red-500 text-center text-sm">{errorMsg}</p>
+            <div className="text-red-500 text-sm text-center border border-red-300 rounded p-2 bg-red-50">
+              {errorMsg}
+            </div>
           )}
 
-          {/* BUTTON */}
+          {/* SUBMIT */}
           <button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition"
@@ -88,10 +89,13 @@ export default function Login() {
           </button>
         </form>
 
-        {/* REGISTER LINK */}
+        {/* LINK TO REGISTER */}
         <p className="text-center text-gray-600 text-sm mt-4">
           ¿No tienes cuenta?{" "}
-          <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+          <Link
+            to="/register"
+            className="text-blue-600 font-semibold hover:underline"
+          >
             Crear cuenta
           </Link>
         </p>

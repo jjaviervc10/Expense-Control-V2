@@ -1,5 +1,4 @@
-import { v4 as uuidv4 } from "uuid"
-import type { Category, DraftExpense, Expense, ReportRange } from "../types"
+import type { Category, Expense, ReportRange } from "../types";
 
 /* =======================
    STATE
@@ -7,16 +6,16 @@ import type { Category, DraftExpense, Expense, ReportRange } from "../types"
 
 export type BudgetState = {
   budgets: {
-    diario: number
-    semanal: number
-    mensual: number
-  }
-  expenses: Expense[]
-  modal: boolean
-  editingId: Expense["id"]
-  currentCategory: Category["id"]
-  currentRange: ReportRange
-}
+    diario: number;
+    semanal: number;
+    mensual: number;
+  };
+  expenses: Expense[];
+  modal: boolean;
+  editingId: Expense["id"];
+  currentCategory: Category["id"];
+  currentRange: ReportRange;
+};
 
 /* =======================
    ACTIONS
@@ -25,37 +24,27 @@ export type BudgetState = {
 export type BudgetActions =
   | { type: "set-range"; payload: { range: ReportRange } }
   | { type: "add-budget"; payload: { budget: number } }
-  | { type: "add-expense"; payload: { expense: DraftExpense } }
+  | { type: "add-expense"; payload: { expense: Expense } }
   | { type: "remove-expense"; payload: { id: Expense["id"] } }
   | { type: "get-expense-by-id"; payload: { id: Expense["id"] } }
   | { type: "update-expense"; payload: { expense: Expense } }
   | { type: "reset-app" }
   | { type: "show-modal" }
   | { type: "close-modal" }
-  | { type: "add-filter-category"; payload: { id: Category["id"] } }
-
-/* =======================
-   STORAGE
-======================= */
-
-const loadBudgets = () =>
-  JSON.parse(localStorage.getItem("budgets") || '{"diario":0,"semanal":0,"mensual":0}')
-
-const loadExpenses = (): Expense[] =>
-  JSON.parse(localStorage.getItem("expenses") || "[]")
+  | { type: "add-filter-category"; payload: { id: Category["id"] } };
 
 /* =======================
    INITIAL STATE
 ======================= */
 
 export const initialState: BudgetState = {
-  budgets: loadBudgets(),
-  expenses: loadExpenses(),
+  budgets: JSON.parse(localStorage.getItem("budgets") || '{"diario":0,"semanal":0,"mensual":0}'),
+  expenses: [], // ✅ NO cargamos desde localStorage
   modal: false,
   editingId: "",
   currentCategory: "",
-  currentRange: "diario"
-}
+  currentRange: "diario",
+};
 
 /* =======================
    REDUCER
@@ -65,69 +54,75 @@ export const budgetReducer = (
   state: BudgetState,
   action: BudgetActions
 ): BudgetState => {
+  switch (action.type) {
+    case "set-range":
+      return { ...state, currentRange: action.payload.range };
 
-  /* CAMBIAR CONTEXTO */
-  if (action.type === "set-range") {
-    return { ...state, currentRange: action.payload.range }
-  }
-
-  /* DEFINIR PRESUPUESTO */
-  if (action.type === "add-budget") {
-    const updated = {
-      ...state.budgets,
-      [state.currentRange]: action.payload.budget
+    case "add-budget": {
+      const updated = {
+        ...state.budgets,
+        [state.currentRange]: action.payload.budget,
+      };
+      localStorage.setItem("budgets", JSON.stringify(updated));
+      return { ...state, budgets: updated };
     }
 
-    localStorage.setItem("budgets", JSON.stringify(updated))
-    return { ...state, budgets: updated }
-  }
+    case "add-expense":
+      return {
+        ...state,
+        expenses: [...state.expenses, action.payload.expense],
+        modal: false,
+      };
 
-  /* AGREGAR GASTO */
-  if (action.type === "add-expense") {
-    const expense: Expense = {
-      ...action.payload.expense,
-      id: uuidv4(),
-      range: state.currentRange       // ✅ SE FIJA AQUÍ
+    case "remove-expense":
+      return {
+        ...state,
+        expenses: state.expenses.filter(e => e.id !== action.payload.id),
+      };
+
+    case "get-expense-by-id":
+      return {
+        ...state,
+        editingId: action.payload.id,
+        modal: true,
+      };
+
+    case "update-expense":
+      return {
+        ...state,
+        expenses: state.expenses.map(e =>
+          e.id === action.payload.expense.id ? action.payload.expense : e
+        ),
+        modal: false,
+        editingId: "",
+      };
+
+    case "reset-app": {
+      const range = state.currentRange;
+      const updatedBudgets = {
+        ...state.budgets,
+        [range]: 0,
+      };
+      localStorage.setItem("budgets", JSON.stringify(updatedBudgets));
+      return {
+        ...state,
+        budgets: updatedBudgets,
+        expenses: state.expenses.filter(e => e.range !== range),
+        modal: false,
+        editingId: "",
+      };
     }
 
-    const updated = [...state.expenses, expense]
-    localStorage.setItem("expenses", JSON.stringify(updated))
+    case "show-modal":
+      return { ...state, modal: true };
 
-    return { ...state, expenses: updated, modal: false }
+    case "close-modal":
+      return { ...state, modal: false, editingId: "" };
+
+    case "add-filter-category":
+      return { ...state, currentCategory: action.payload.id };
+
+    default:
+      return state;
   }
-
-  /* RESET SOLO DEL RANGO ACTUAL */
-  if (action.type === "reset-app") {
-    const range = state.currentRange
-
-    const updatedBudgets = {
-      ...state.budgets,
-      [range]: 0
-    }
-
-    const updatedExpenses = state.expenses.filter(
-      e => e.range !== range
-    )
-
-    localStorage.setItem("budgets", JSON.stringify(updatedBudgets))
-    localStorage.setItem("expenses", JSON.stringify(updatedExpenses))
-
-    return {
-      ...state,
-      budgets: updatedBudgets,
-      expenses: updatedExpenses,
-      modal: false,
-      editingId: ""
-    }
-  }
-
-  /* MODAL */
-  if (action.type === "show-modal") return { ...state, modal: true }
-  if (action.type === "close-modal") return { ...state, modal: false, editingId: "" }
-
-  /* FILTRO */
-  if (action.type === "add-filter-category")
-    return { ...state, currentCategory: action.payload.id }
-
-  return state
-}
+};

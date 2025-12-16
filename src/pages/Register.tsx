@@ -1,16 +1,16 @@
+// src/pages/Register.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
-import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [form, setForm] = useState({
-    email: "",
+    usuario: "",
+    nombreCompleto: "",
+    telefono: "",
+    correo: "",
     password: "",
-    nombre: "",
   });
 
   const [errorMsg, setErrorMsg] = useState("");
@@ -29,35 +29,28 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // 1. Crear el usuario en Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
+      const res = await fetch("http://localhost:4000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          usuario: form.usuario,
+          nombreCompleto: form.nombreCompleto,
+          correo: form.correo,
+          pass: form.password,
+          telefono: form.telefono,
+        }),
       });
 
-      if (authError) throw authError;
+      const data = await res.json();
 
-      const userId = authData.user?.id;
-      if (!userId) throw new Error("No user ID returned from Supabase Auth");
+      if (!res.ok) {
+        throw new Error(data.message || "Error al registrar usuario");
+      }
 
-      // 2. Insertar datos adicionales en la tabla sUsuario
-      const { error: insertError } = await supabase
-        .from("sUsuario")
-        .insert([
-          {
-            idUsuario: userId,
-            correo: form.email,
-            nombre: form.nombre,
-            activo: true,
-            fechaAlta: new Date(),
-          },
-        ]);
-
-      if (insertError) throw insertError;
-
-      alert("Registro exitoso. Inicia sesión.");
+      alert("Registro exitoso. Ahora inicia sesión.");
       navigate("/login");
-
     } catch (error: any) {
       setErrorMsg(error.message);
     } finally {
@@ -81,20 +74,39 @@ export default function Register() {
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
           <input
             type="text"
-            name="nombre"
-            placeholder="Nombre completo"
+            name="usuario"
+            placeholder="Nombre de usuario"
             onChange={handleChange}
-            value={form.nombre}
+            value={form.usuario}
             className="border p-2 rounded"
             required
           />
 
           <input
+            type="text"
+            name="nombreCompleto"
+            placeholder="Nombre completo"
+            onChange={handleChange}
+            value={form.nombreCompleto}
+            className="border p-2 rounded"
+            required
+          />
+
+          <input
+            type="tel"
+            name="telefono"
+            placeholder="Número de celular"
+            onChange={handleChange}
+            value={form.telefono}
+            className="border p-2 rounded"
+          />
+
+          <input
             type="email"
-            name="email"
+            name="correo"
             placeholder="Correo electrónico"
             onChange={handleChange}
-            value={form.email}
+            value={form.correo}
             className="border p-2 rounded"
             required
           />

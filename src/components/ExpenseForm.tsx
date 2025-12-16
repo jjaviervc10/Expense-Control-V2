@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import type {ChangeEvent} from "react";
+import type { ChangeEvent} from "react"
 import DatePicker from "react-date-picker";
-import type { DraftExpense, Value } from "../types";
+import type { DraftExpense, Value, ReportRange } from "../types";
 import { categories } from "../data/categories";
 import ErrorMessage from "./ErrorMessage";
 import { useBudget } from "../hooks/useBudget";
+import { apiCrearGasto } from "../api/expensesApi";
 
 import "react-date-picker/dist/DatePicker.css";
 import "react-calendar/dist/Calendar.css";
@@ -15,71 +16,75 @@ export default function ExpenseForm() {
   const [expense, setExpense] = useState<DraftExpense>({
     expenseName: "",
     amount: 0,
-    category: "",
+    category: "", // 👈 AQUÍ guardamos el NOMBRE, no ID
     date: new Date(),
-    range: state.currentRange
+    range: state.currentRange,
   });
 
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [error, setError] = useState("");
   const [previousAmount, setPreviousAmount] = useState(0);
 
-  /* ==========================
-     EDICIÓN
-  ========================== */
-
+  /* ======================= MONTAJE ======================= */
   useEffect(() => {
     if (state.editingId) {
       const editingExpense = state.expenses.find(
-        e => e.id === state.editingId
+        (e) => e.id === state.editingId
       );
 
       if (editingExpense) {
+        const cat = categories.find(
+          (c) => c.name === editingExpense.category
+        );
+
         setExpense(editingExpense);
+        setSelectedCategoryId(cat?.id || "");
         setPreviousAmount(editingExpense.amount);
       }
     }
   }, [state.editingId, state.expenses]);
 
-  /* ==========================
-     HANDLERS
-  ========================== */
+  /* ======================= HANDLERS ======================= */
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
 
     setExpense({
       ...expense,
-      [name]: name === "amount" ? +value : value
+      [name]: name === "amount" ? +value : value,
     });
   };
 
- 
-  
+  const handleCategoryChange = (
+    e: ChangeEvent<HTMLSelectElement>
+  ) => {
+    const id = e.target.value;
+    const categoryInfo = categories.find((c) => c.id === id);
+
+    if (!categoryInfo) return;
+
+    setSelectedCategoryId(id);
+    setExpense({
+      ...expense,
+      category: categoryInfo.name, // 👈 GUARDAMOS NOMBRE
+    });
+  };
+
   const handleChangeDate = (value: Value) => {
-  if (!value) return;
+    if (!value) return;
+    const date = Array.isArray(value) ? value[0] : value;
+    if (date) setExpense({ ...expense, date });
+  };
 
-  // Si viene un rango, tomamos la primera fecha
-  if (Array.isArray(value)) {
-    if (value[0]) {
-      setExpense({
-        ...expense,
-        date: value[0]
-      });
-    }
-    return;
-  }
+  /* ======================= SUBMIT ======================= */
 
-  // Si viene una sola fecha
-  setExpense({
-    ...expense,
-    date: value
-  });
-};
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+
+    const tipo = state.currentRange;
 
     if (
       !expense.expenseName ||
@@ -95,34 +100,59 @@ export default function ExpenseForm() {
       return;
     }
 
-    if (state.editingId) {
-      dispatch({
-        type: "update-expense",
-        payload: { expense: { ...expense, id: state.editingId } }
-      });
-    } else {
-      dispatch({ type: "add-expense", payload: { expense } });
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("No autenticado");
+      return;
     }
 
-    setExpense({
-      expenseName: "",
-      amount: 0,
-      category: "",
-      date: new Date(),
-      range: state.currentRange
-    });
+    try {
+      const response = await apiCrearGasto(token, {
+        tipo,
+        categoria: selectedCategoryId, // 👈 backend recibe ID
+        monto: expense.amount,
+        fecha: expense.date.toISOString(),
+      });
 
-    setPreviousAmount(0);
+      // 🔥 Guardamos en estado con NOMBRE
+      dispatch({
+        type: "add-expense",
+        payload: {
+          expense: {
+            id: String(response.idGasto),
+            expenseName: expense.expenseName,
+            amount: expense.amount,
+            category: response.categoria, // 👈 nombre desde backend
+            date: new Date(response.fecha),
+            range: tipo as ReportRange,
+          },
+        },
+      });
+
+      // Reset
+      setExpense({
+        expenseName: "",
+        amount: 0,
+        category: "",
+        date: new Date(),
+        range: tipo as ReportRange,
+      });
+
+      setSelectedCategoryId("");
+      setPreviousAmount(0);
+      dispatch({ type: "close-modal" });
+    } catch (err) {
+      console.error(err);
+      setError("Error al guardar el gasto");
+    }
   };
 
-  /* ==========================
-     UI
-  ========================== */
+  /* ======================= UI ======================= */
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <legend className="uppercase text-center text-2xl font-black border-b-4 border-blue-500 py-2">
-        {state.editingId ? "Guardar Cambio" : "Nuevo Gasto"}
+        {state.editingId ? "Editar Gasto" : "Nuevo Gasto"}
       </legend>
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -146,24 +176,19 @@ export default function ExpenseForm() {
       />
 
       <select
-        name="category"
+        value={selectedCategoryId}
+        onChange={handleCategoryChange}
         className="w-full bg-slate-100 p-2"
-        value={expense.category}
-        onChange={handleChange}
       >
         <option value="">-- Selecciona una categoría --</option>
-        {categories.map(cat => (
+        {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>
             {cat.name}
           </option>
         ))}
       </select>
 
-      <DatePicker
-        value={expense.date}
-        onChange={handleChangeDate}
-       
-      />
+      <DatePicker value={expense.date} onChange={handleChangeDate} />
 
       <input
         type="submit"

@@ -1,29 +1,75 @@
 // src/components/BudgetForm.tsx
-import { useMemo, useState } from "react"
-import { useBudget } from "../hooks/useBudget"
+import { useMemo, useState, useEffect } from "react";
+import { postPresupuesto } from "../api/presupuestoApi";
+import { useAuth } from "../context/AuthContext";
+import { useBudget } from "../hooks/useBudget";
 
-export default function BudgetForm() {
-  const [budget, setBudget] = useState(0)
-  const { dispatch } = useBudget()
+type Props = {
+  tipo: "diario" | "semanal" | "mensual";
+  onSuccess?: () => void; // ✅ Añadido
+};
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBudget(e.target.valueAsNumber)
-  }
+export default function BudgetForm({ tipo, onSuccess }: Props) {
+  const [budget, setBudget] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const { token } = useAuth();
+  const { dispatch } = useBudget();
+
+  useEffect(() => {
+    console.log("🧩 BudgetForm montado");
+    console.log("📂 Tipo recibido:", tipo);
+    console.log("🔐 Token presente:", !!token);
+  }, [tipo, token]);
 
   const isValid = useMemo(() => {
-    return isNaN(budget) || budget <= 0
-  }, [budget])
+    return isNaN(budget) || budget <= 0;
+  }, [budget]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    dispatch({
-      type: "add-budget",
-      payload: { budget }
-    })
-    // ❌ NO navigate aquí
-    // El layout reacciona solo
-  }
+    console.log("🚀 Submit presupuesto");
+    console.log("➡️ Tipo:", tipo);
+    console.log("➡️ Monto:", budget);
+
+    if (!token) {
+      console.error("❌ No hay token");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        montoLimite: budget,
+        fechaInicio: new Date().toISOString(),
+        fechaFin: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+        categoria: tipo,
+      };
+
+      console.log("📤 Enviando POST a backend:", payload);
+
+      const presupuesto = await postPresupuesto(token, payload);
+
+      console.log("✅ Respuesta backend:", presupuesto);
+
+      dispatch({
+        type: "add-budget",
+        payload: { budget },
+      });
+
+      console.log("🎯 Presupuesto guardado y refetch ejecutado.");
+
+      // ✅ Llamar al callback si se definió
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error("❌ Error al crear presupuesto:", error);
+      alert("Error al crear presupuesto");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
@@ -41,17 +87,17 @@ export default function BudgetForm() {
           className="w-full bg-white border border-gray-200 p-2"
           placeholder="Define tu presupuesto"
           value={budget}
-          onChange={handleChange}
+          onChange={(e) => setBudget(e.target.valueAsNumber)}
         />
       </div>
 
       <input
         type="submit"
-        value="Definir Presupuesto"
+        value={loading ? "Guardando..." : "Definir Presupuesto"}
         className="bg-blue-600 hover:bg-blue-700 cursor-pointer w-full p-2 text-white 
         font-black uppercase disabled:opacity-40"
-        disabled={isValid}
+        disabled={isValid || loading}
       />
     </form>
-  )
+  );
 }

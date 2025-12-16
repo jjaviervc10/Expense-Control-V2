@@ -1,7 +1,11 @@
 // src/pages/Dashboard.tsx
 import { Link } from "react-router-dom";
+import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { logout } from "../utils/logout";
+import { useAutoLogout } from "../hooks/useAutoLogout";
 
 export default function Dashboard() {
+  useAutoLogout(); // ⏱️ activado
   return (
     <div className="min-h-screen bg-gray-100 p-6">
 
@@ -10,6 +14,14 @@ export default function Dashboard() {
         <h1 className="text-4xl font-bold text-blue-700">
           Control de Gastos
         </h1>
+          <button
+            onClick={logout}
+            className="fixed top-4 right-4 bg-red-600 text-white p-3 rounded-full shadow-lg z-50 hover:bg-red-700 transition"
+            title="Cerrar Sesión"
+          >
+            <ArrowRightOnRectangleIcon className="w-6 h-6" />
+          </button>
+        
         <p className="text-gray-600 mt-1">
           Selecciona el tipo de reporte
         </p>

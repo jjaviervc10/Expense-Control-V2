@@ -2,16 +2,19 @@
 import { useParams } from "react-router-dom"
 import { useEffect } from "react"
 import { useBudget } from "../../hooks/useBudget"
-
+import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { logout } from "../../utils/logout";
 import BudgetForm from "../../components/BudgetForm"
 import BudgetTracker from "../../components/BudgetTracker"
 import ExpenseList from "../../components/ExpenseList"
 import ExpenseModal from "../../components/ExpenseModal"
 import FilterByCategory from "../../components/FilterByCategory"
+import { useAutoLogout } from "../../hooks/useAutoLogout";
 
 export default function GastoLayout() {
   const { tipo } = useParams() // diario | semanal | mensual
   const { state, dispatch } = useBudget()
+   useAutoLogout(); // ⏱️ activado
 
   // 🔥 Fuente ÚNICA de verdad: la URL
   useEffect(() => {
@@ -28,6 +31,13 @@ export default function GastoLayout() {
         <h1 className="uppercase text-center font-black text-4xl text-white">
           PLANIFICADOR DE GASTOS - {tipo?.toUpperCase()}
         </h1>
+          <button
+            onClick={logout}
+            className="fixed top-4 right-4 bg-red-600 text-white p-3 rounded-full shadow-lg z-50 hover:bg-red-700 transition"
+            title="Cerrar Sesión"
+          >
+            <ArrowRightOnRectangleIcon className="w-6 h-6" />
+          </button>
       </header>
 
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg mt-10 p-10">
