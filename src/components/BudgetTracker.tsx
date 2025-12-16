@@ -5,7 +5,8 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import ConfirmResetModal from "./ConfirmResetModal";
 import DownloadPdfButton from "./DownloadPdfButton";
-import { usePresupuestoActivo } from "../hooks/usePresupuestoActivo"; // ✅ IMPORTANTE
+import { usePresupuestoActivo } from "../hooks/usePresupuestoActivo";
+import { apiResetApp } from "../api/resetApi";
 
 type Props = {
   tipo: "diario" | "semanal" | "mensual";
@@ -14,13 +15,17 @@ type Props = {
 
 export default function BudgetTracker({ tipo, onResetSuccess }: Props) {
   const { totalExpenses, dispatch } = useBudget();
-  const { montoLimite, loading, error, refetch } = usePresupuestoActivo(tipo); // ✅ AQUÍ
+  const { montoLimite, loading, error, refetch } = usePresupuestoActivo(tipo);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (loading) return <p className="text-center">Cargando presupuesto...</p>;
 
   if (error || montoLimite === null)
-    return <p className="text-center text-red-500">Error al cargar presupuesto</p>;
+    return (
+      <p className="text-center text-red-500">
+        Error al cargar presupuesto
+      </p>
+    );
 
   const remainingBudget = montoLimite - totalExpenses;
   const percentage =
@@ -30,14 +35,11 @@ export default function BudgetTracker({ tipo, onResetSuccess }: Props) {
     try {
       const token = localStorage.getItem("token");
 
-      await fetch("http://localhost:4000/api/reset", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ categoria: tipo }),
-      });
+      if (!token) {
+        throw new Error("Token no encontrado");
+      }
+
+      await apiResetApp(token, tipo);
 
       dispatch({ type: "reset-app" });
 

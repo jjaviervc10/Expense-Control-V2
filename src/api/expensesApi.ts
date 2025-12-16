@@ -1,4 +1,5 @@
-const BASE_URL = "http://localhost:4000/api/gastos";
+//const BASE_URL = "http://localhost:4000/api/gastos";
+const BASE_URL = `${import.meta.env.VITE_API_URL}/gastos`;
 
 function authHeaders(token: string) {
   return {

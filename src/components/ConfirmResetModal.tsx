@@ -1,6 +1,5 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { useBudget } from "../hooks/useBudget";
 import { useState } from "react";
 
 export default function ConfirmResetModal({ open, onClose, onConfirm }: any) {

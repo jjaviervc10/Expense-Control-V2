@@ -1,4 +1,6 @@
-const BASE_URL = "http://localhost:4000/api/presupuesto";
+//const BASE_URL = "http://localhost:4000/api/presupuesto";
+
+const BASE_URL = `${import.meta.env.VITE_API_URL}/presupuesto`;
 
 export const getPresupuestoActivo = async (token: string, categoria: string) => {
   const res = await fetch(`${BASE_URL}/activo?categoria=${categoria}`, {

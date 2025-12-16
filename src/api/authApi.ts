@@ -1,6 +1,7 @@
 // src/api/authApi.ts
 
-const BASE_URL = "http://localhost:4000/api";
+// BASE GLOBAL → apunta a /api/auth
+const BASE_URL = `${import.meta.env.VITE_API_URL}/auth`;
 
 /* ======================================================
    TIPOS
@@ -34,16 +35,19 @@ export async function apiLogin(
   correo: string,
   password: string
 ): Promise<LoginSuccessResponse> {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
+  const res = await fetch(`${BASE_URL}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ correo, password }),
   });
 
   const data = await res.json();
 
   if (!res.ok) {
-    throw data as LoginErrorResponse; // 🔥 pasamos el error completo para manejarlo en el front
+    // Pasamos el error completo para manejarlo en el frontend
+    throw data as LoginErrorResponse;
   }
 
   return data as LoginSuccessResponse;
@@ -62,9 +66,11 @@ export type RegisterPayload = {
 };
 
 export async function apiRegister(payload: RegisterPayload) {
-  const res = await fetch(`${BASE_URL}/auth/register`, {
+  const res = await fetch(`${BASE_URL}/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(payload),
   });
 

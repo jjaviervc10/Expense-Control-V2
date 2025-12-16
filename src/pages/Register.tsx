@@ -1,6 +1,6 @@
-// src/pages/Register.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { apiRegister } from "../api/authApi";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -13,14 +13,15 @@ export default function Register() {
     password: "",
   });
 
-  const [errorMsg, setErrorMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -29,30 +30,18 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usuario: form.usuario,
-          nombreCompleto: form.nombreCompleto,
-          correo: form.correo,
-          pass: form.password,
-          telefono: form.telefono,
-        }),
+      await apiRegister({
+        usuario: form.usuario,
+        nombreCompleto: form.nombreCompleto,
+        correo: form.correo,
+        pass: form.password,
+        telefono: form.telefono || undefined,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Error al registrar usuario");
-      }
 
       alert("Registro exitoso. Ahora inicia sesión.");
       navigate("/login");
     } catch (error: any) {
-      setErrorMsg(error.message);
+      setErrorMsg(error.message || "Error al registrar usuario");
     } finally {
       setLoading(false);
     }
@@ -76,8 +65,8 @@ export default function Register() {
             type="text"
             name="usuario"
             placeholder="Nombre de usuario"
-            onChange={handleChange}
             value={form.usuario}
+            onChange={handleChange}
             className="border p-2 rounded"
             required
           />
@@ -86,8 +75,8 @@ export default function Register() {
             type="text"
             name="nombreCompleto"
             placeholder="Nombre completo"
-            onChange={handleChange}
             value={form.nombreCompleto}
+            onChange={handleChange}
             className="border p-2 rounded"
             required
           />
@@ -96,8 +85,8 @@ export default function Register() {
             type="tel"
             name="telefono"
             placeholder="Número de celular"
-            onChange={handleChange}
             value={form.telefono}
+            onChange={handleChange}
             className="border p-2 rounded"
           />
 
@@ -105,8 +94,8 @@ export default function Register() {
             type="email"
             name="correo"
             placeholder="Correo electrónico"
-            onChange={handleChange}
             value={form.correo}
+            onChange={handleChange}
             className="border p-2 rounded"
             required
           />
@@ -115,16 +104,17 @@ export default function Register() {
             type="password"
             name="password"
             placeholder="Contraseña"
-            onChange={handleChange}
             value={form.password}
+            onChange={handleChange}
             className="border p-2 rounded"
             minLength={6}
             required
           />
 
           <button
+            type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white py-2 rounded mt-2 hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white py-2 rounded mt-2 hover:bg-blue-700 transition disabled:opacity-50"
           >
             {loading ? "Creando cuenta..." : "Registrarse"}
           </button>

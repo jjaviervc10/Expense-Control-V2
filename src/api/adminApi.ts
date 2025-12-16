@@ -1,5 +1,7 @@
 // src/api/adminApi.ts
-const BASE_URL = "http://localhost:4000/api/admin";
+//const BASE_URL = "http://localhost:4000/api/admin";
+const BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
+
 
 function authHeaders(token: string) {
   return {
