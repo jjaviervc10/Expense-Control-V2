@@ -27,7 +27,7 @@ export default function Login() {
     } catch (error: any) {
       if (error?.requierePago) {
         setErrorMsg(
-          `Tu prueba ha expirado. Realiza un depósito o transferencia de $100 al número de tarjeta XXXX-XXXX-XXXX-1234 (CLABE: 012345678901234567) a nombre de Javier para activar tu cuenta.`
+          `Tu prueba ha expirado. Realiza un depósito o transferencia de $100 al número de tarjeta 4152-3142-7590-5464 (CLABE INTERBACARIA:012150015329192098 ) a nombre de Javier Velazquez para activar tu cuenta.`
         );
       } else {
         setErrorMsg(error.message || "Correo o contraseña incorrectos.");

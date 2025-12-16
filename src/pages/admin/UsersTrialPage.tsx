@@ -1,7 +1,10 @@
-// src/pages/admin/UsersTrialPage.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { apiListUsers, apiDeleteUser } from "../../api/adminApi";
+import {
+  apiListUsers,
+  apiDeleteUser,
+  apiActivatePayment,
+} from "../../api/adminApi";
 import AdminUserTable from "../../components/AdminUserTable";
 
 export default function UsersTrialPage() {
@@ -11,12 +14,13 @@ export default function UsersTrialPage() {
 
   useEffect(() => {
     if (!token) return;
+
     (async () => {
       try {
         const all = await apiListUsers(token);
-        // ejemplo de filtro: en prueba => ultimoPago es null
-        const trial = all.filter(u => !u.ultimoPago);
-        setUsuarios(trial);
+
+        const trialUsers = all.filter((u) => !u.ultimoPago); // no han pagado
+        setUsuarios(trialUsers);
       } catch (e) {
         console.error(e);
       } finally {
@@ -25,21 +29,35 @@ export default function UsersTrialPage() {
     })();
   }, [token]);
 
+  const handleActivate = async (idUsuario: number) => {
+    if (!token) return;
+    const updatedUser = await apiActivatePayment(token, idUsuario);
+
+    setUsuarios((prev) =>
+      prev.map((u) =>
+        u.idUsuario === idUsuario ? { ...u, ...updatedUser } : u
+      )
+    );
+  };
+
   const handleDelete = async (idUsuario: number) => {
     if (!token) return;
     await apiDeleteUser(token, idUsuario);
-    setUsuarios(prev => prev.filter(u => u.idUsuario !== idUsuario));
+    setUsuarios((prev) => prev.filter((u) => u.idUsuario !== idUsuario));
   };
 
   if (loading) return <p>Cargando usuarios en prueba...</p>;
 
   return (
     <>
-      <h2 className="text-xl font-semibold mb-4">Usuarios en prueba gratuita</h2>
+      <h2 className="text-xl font-semibold mb-4">
+        Usuarios en prueba gratuita
+      </h2>
       <AdminUserTable
         usuarios={usuarios}
+        onActivate={handleActivate}
         onDelete={handleDelete}
-        showActivate={false}
+        showActivate={true}
       />
     </>
   );
