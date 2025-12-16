@@ -1,61 +1,100 @@
 // src/pages/gastos/GastoLayout.tsx
-import { useParams } from "react-router-dom"
-import { useEffect } from "react"
-import { useBudget } from "../../hooks/useBudget"
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useBudget } from "../../hooks/useBudget";
+import { ArrowRightOnRectangleIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { logout } from "../../utils/logout";
-import BudgetForm from "../../components/BudgetForm"
-import BudgetTracker from "../../components/BudgetTracker"
-import ExpenseList from "../../components/ExpenseList"
-import ExpenseModal from "../../components/ExpenseModal"
-import FilterByCategory from "../../components/FilterByCategory"
+
+import BudgetForm from "../../components/BudgetForm";
+import BudgetTracker from "../../components/BudgetTracker";
+import ExpenseList from "../../components/ExpenseList";
+import ExpenseModal from "../../components/ExpenseModal";
+import FilterByCategory from "../../components/FilterByCategory";
+
+import { usePresupuestoActivo } from "../../hooks/usePresupuestoActivo";
 import { useAutoLogout } from "../../hooks/useAutoLogout";
 
 export default function GastoLayout() {
-  const { tipo } = useParams() // diario | semanal | mensual
-  const { state, dispatch } = useBudget()
-   useAutoLogout(); // ⏱️ activado
+  const { tipo } = useParams(); // diario | semanal | mensual
+  const navigate = useNavigate();
+  const { state, dispatch } = useBudget();
+  useAutoLogout();
 
-  // 🔥 Fuente ÚNICA de verdad: la URL
+  const [refresh, setRefresh] = useState(0);
+  const [filterCategory, setFilterCategory] = useState("");
+
+  // Validar el tipo
+  const isValidTipo = tipo === "diario" || tipo === "semanal" || tipo === "mensual";
+
   useEffect(() => {
-    if (tipo === "diario" || tipo === "semanal" || tipo === "mensual") {
-      dispatch({ type: "set-range", payload: { range: tipo } })
+    if (isValidTipo) {
+      dispatch({ type: "set-range", payload: { range: tipo } });
     }
-  }, [tipo, dispatch])
+  }, [tipo, dispatch]);
 
-  const presupuestoActual = state.budgets[state.currentRange]
+  // Recargar cuando hay cambios en gastos
+  useEffect(() => {
+    if (state.expenses.some((e) => e.range === tipo)) {
+      setRefresh((prev) => prev + 1);
+    }
+  }, [state.expenses, tipo]);
+
+  const {
+    montoLimite,
+    loading,
+    error,
+    refetch: refetchPresupuesto,
+  } = usePresupuestoActivo(tipo || "");
 
   return (
     <>
+      {/* BOTÓN VOLVER */}
+      <button
+        onClick={() => navigate("/dashboard")}
+        className="fixed top-4 left-4 bg-white text-blue-600 p-2 rounded-full shadow-lg border border-blue-500 hover:bg-blue-50 transition z-50"
+        title="Volver al Dashboard"
+      >
+        <ArrowLeftIcon className="h-6 w-6" />
+      </button>
+
       <header className="bg-blue-600 py-8 max-h-72">
         <h1 className="uppercase text-center font-black text-4xl text-white">
           PLANIFICADOR DE GASTOS - {tipo?.toUpperCase()}
         </h1>
-          <button
-            onClick={logout}
-            className="fixed top-4 right-4 bg-red-600 text-white p-3 rounded-full shadow-lg z-50 hover:bg-red-700 transition"
-            title="Cerrar Sesión"
-          >
-            <ArrowRightOnRectangleIcon className="w-6 h-6" />
-          </button>
+        <button
+          onClick={logout}
+          className="fixed top-4 right-4 bg-red-600 text-white p-3 rounded-full shadow-lg z-50 hover:bg-red-700 transition"
+          title="Cerrar Sesión"
+        >
+          <ArrowRightOnRectangleIcon className="w-6 h-6" />
+        </button>
       </header>
 
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg mt-10 p-10">
-        {/* ✅ MISMO FLUJO DEL PROYECTO BASE */}
-        {presupuestoActual === 0 ? (
-          <BudgetForm />
+        {loading ? (
+          <p className="text-center">Cargando presupuesto...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : montoLimite === null ? (
+          <BudgetForm tipo={tipo as "diario" | "semanal" | "mensual"} onSuccess={refetchPresupuesto} />
         ) : (
           <>
-            <BudgetTracker />
-
+            <BudgetTracker
+              tipo={tipo as "diario" | "semanal" | "mensual"}
+              onResetSuccess={refetchPresupuesto}
+            />
             <main className="max-w-3xl mx-auto py-10">
-              <FilterByCategory />
-              <ExpenseList />
+              <FilterByCategory onChange={setFilterCategory} />
+              <ExpenseList
+                tipo={tipo as "diario" | "semanal" | "mensual"}
+                refresh={refresh}
+                filterCategory={filterCategory}
+              />
               <ExpenseModal />
             </main>
           </>
         )}
       </div>
     </>
-  )
+  );
 }
