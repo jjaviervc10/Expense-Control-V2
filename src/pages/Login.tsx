@@ -1,6 +1,8 @@
-import { useState } from "react";
+// src/pages/Login.tsx
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import InstallPrompt from "../components/InstallPrompt";
 
 export default function Login() {
   const { login } = useAuth();
@@ -9,6 +11,21 @@ export default function Login() {
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [appInstalled, setAppInstalled] = useState(false);
+
+  useEffect(() => {
+    // Verificar si la app ya está instalada
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    setAppInstalled(isStandalone);
+
+    const handler = () => {
+      setAppInstalled(true);
+    };
+
+    window.addEventListener("appinstalled", handler);
+
+    return () => window.removeEventListener("appinstalled", handler);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,13 +44,18 @@ export default function Login() {
     } catch (error: any) {
       if (error?.requierePago) {
         setErrorMsg(
-          `Tu prueba ha expirado. Realiza un depósito o transferencia de $100 al número de tarjeta 4152-3142-7590-5464 (CLABE INTERBACARIA:012150015329192098 ) a nombre de Javier Velazquez para activar tu cuenta.`
+          `Tu prueba ha expirado. Realiza un depósito o transferencia de $100 al número de tarjeta 4152-3142-7590-5464 (CLABE: 012150015329192098) a nombre de Javier Velazquez para activar tu cuenta.`
         );
       } else {
         setErrorMsg(error.message || "Correo o contraseña incorrectos.");
       }
     }
   };
+
+  // Mostrar pantalla de instalación si aún no está instalada
+  if (!appInstalled) {
+    return <InstallPrompt onInstalled={() => setAppInstalled(true)} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -92,10 +114,7 @@ export default function Login() {
         {/* LINK TO REGISTER */}
         <p className="text-center text-gray-600 text-sm mt-4">
           ¿No tienes cuenta?{" "}
-          <Link
-            to="/register"
-            className="text-blue-600 font-semibold hover:underline"
-          >
+          <Link to="/register" className="text-blue-600 font-semibold hover:underline">
             Crear cuenta
           </Link>
         </p>
