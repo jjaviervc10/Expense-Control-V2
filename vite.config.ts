@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'opcionA.png'], // si tienes más, los agregas aquí
+      includeAssets: ['favicon.svg', 'opcionA.png', 'OneSignalSDKWorker.js'], // si tienes más, los agregas aquí
       manifest: {
         name: 'Control de Gastos',
         short_name: 'Gastos',
