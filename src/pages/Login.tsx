@@ -57,6 +57,7 @@ export default function Login() {
     toast.error("El sistema de notificaciones aún no está listo.");
     return;
   }
+  
 
   window.OneSignal.push(async () => {
     try {

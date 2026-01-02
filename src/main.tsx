@@ -18,32 +18,34 @@ declare global {
 
 function OneSignalInit() {
   useEffect(() => {
-    if (!window.OneSignal) return;
+    const waitForOneSignal = () => {
+      if (window.OneSignal && window.OneSignal.push) {
+        window.OneSignal.push(() => {
+          window.OneSignal.init({
+            appId: "b19ba635-c385-4174-919a-d32ebea87b97",
+            notifyButton: { enable: false },
+            allowLocalhostAsSecureOrigin: true,
+          });
 
-    window.OneSignal = window.OneSignal || [];
+          console.log("✅ OneSignal initialized!");
 
-    window.OneSignal.push(() => {
-      // ⛔ Evita doble init
-      if (window.OneSignal._initialized) return;
+          // Evento opcional
+          window.OneSignal.on("subscriptionChange", (isSubscribed: boolean) => {
+            console.log("🔔 Subscription changed:", isSubscribed);
+          });
+        });
+      } else {
+        // Reintenta cada 200ms hasta que esté listo
+        setTimeout(waitForOneSignal, 200);
+      }
+    };
 
-      window.OneSignal.init({
-        appId: "b19ba635-c385-4174-919a-d32ebea87b97",
-        notifyButton: {
-          enable: false, // usamos botón personalizado
-        },
-        allowLocalhostAsSecureOrigin: true,
-      });
-
-      window.OneSignal._initialized = true;
-
-      window.OneSignal.on("subscriptionChange", (isSubscribed: boolean) => {
-        console.log("🔔 Subscription changed:", isSubscribed);
-      });
-    });
+    waitForOneSignal();
   }, []);
 
   return null;
 }
+
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
