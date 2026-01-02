@@ -1,23 +1,34 @@
 // src/routes/AppRouter.tsx
-import { Routes, Route, Navigate } from "react-router-dom"
-import LoginPage from "../pages/Login"
-import RegisterPage from "../pages/Register"
-import ProtectedRoute from "../components/ProtectedRoute"
-import AdminRoute from "../components/AdminRoute"
-import Dashboard from "../pages/Dashboard"
-import AdminLayout from "../pages/admin/AdminLayout"
-import UsersTrialPage from "../pages/admin/UsersTrialPage"
-import UsersPaidPage from "../pages/admin/UsersPaidPage"
+import { Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "../pages/Login";
+import RegisterPage from "../pages/Register";
+import ProtectedRoute from "../components/ProtectedRoute";
+import AdminRoute from "../components/AdminRoute";
+import Dashboard from "../pages/Dashboard";
+import AdminLayout from "../pages/admin/AdminLayout";
+import UsersTrialPage from "../pages/admin/UsersTrialPage";
+import UsersPaidPage from "../pages/admin/UsersPaidPage";
 
 // 👇 nuevas
-import Diario from "../pages/gastos/Diario"
-import Semanal from "../pages/gastos/Semanal"
-import Mensual from "../pages/gastos/Mensual"
+import Diario from "../pages/gastos/Diario";
+import Semanal from "../pages/gastos/Semanal";
+import Mensual from "../pages/gastos/Mensual";
+
+// ⬇️ instalacion y onboarding
+import InstallPrompt from "../components/InstallPrompt";
+import Onboarding from "../components/Onboarding";
 
 export default function AppRouter() {
   return (
     <Routes>
-      {/* públicas */}
+
+      {/* ruta de instalación PWA */}
+      <Route path="/install" element={<InstallPrompt />} />
+
+      {/* onboarding después de la instalación */}
+      <Route path="/onboarding" element={<Onboarding />} />
+
+      {/* rutas públicas */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
@@ -70,7 +81,8 @@ export default function AppRouter() {
         <Route path="paid" element={<UsersPaidPage />} />
       </Route>
 
+      {/* ruta fallback */}
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
-  )
+  );
 }

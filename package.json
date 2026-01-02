@@ -20,9 +20,10 @@
     "react-circular-progressbar": "^2.2.0",
     "react-date-picker": "^12.0.1",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.6",
+    "react-router-dom": "^7.11.0",
     "react-swipeable-list": "^1.10.0",
     "react-toastify": "^11.0.5",
+    "swiper": "^12.0.3",
     "tailwindcss": "^4.1.17",
     "uuid": "^13.0.0"
   },
