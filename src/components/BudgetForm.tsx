@@ -12,15 +12,21 @@ type Props = {
 export default function BudgetForm({ tipo, onSuccess }: Props) {
   const [budget, setBudget] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   const { token } = useAuth();
   const { dispatch } = useBudget();
 
   useEffect(() => {
-    console.log("🧩 BudgetForm montado");
-    console.log("📂 Tipo recibido:", tipo);
-    console.log("🔐 Token presente:", !!token);
-  }, [tipo, token]);
+    if (showSuccess || showError) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+        setShowError(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess, showError]);
 
   const isValid = useMemo(() => {
     return isNaN(budget) || budget <= 0;
@@ -28,18 +34,11 @@ export default function BudgetForm({ tipo, onSuccess }: Props) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    console.log("🚀 Submit presupuesto");
-    console.log("➡️ Tipo:", tipo);
-    console.log("➡️ Monto:", budget);
-
     if (!token) {
-      console.error("❌ No hay token");
+      setShowError(true);
       return;
     }
-
     setLoading(true);
-
     try {
       const payload = {
         montoLimite: budget,
@@ -47,57 +46,69 @@ export default function BudgetForm({ tipo, onSuccess }: Props) {
         fechaFin: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
         categoria: tipo,
       };
-
-      console.log("📤 Enviando POST a backend:", payload);
-
-      const presupuesto = await postPresupuesto(token, payload);
-
-      console.log("✅ Respuesta backend:", presupuesto);
-
+      await postPresupuesto(token, payload);
       dispatch({
         type: "add-budget",
         payload: { budget },
       });
-
-      console.log("🎯 Presupuesto guardado y refetch ejecutado.");
-
-      // ✅ Llamar al callback si se definió
+      setShowSuccess(true);
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("❌ Error al crear presupuesto:", error);
-      alert("Error al crear presupuesto");
+      setShowError(true);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
-      <div className="flex flex-col space-y-5">
-        <label
-          htmlFor="budget"
-          className="text-4xl text-blue-600 font-bold text-center"
-        >
-          Definir Presupuesto
-        </label>
-
+    <form
+      className="budget-card bg-transparent shadow-sm rounded-xl p-8 max-w-md mx-auto mt-12 text-center"
+      onSubmit={handleSubmit}
+    >
+      <h2 className="text-3xl font-bold mb-4 text-blue-700 drop-shadow-md flex items-center justify-center gap-2">
+        <span role="img" aria-label="money">💰</span>
+        Define tu presupuesto mensual
+      </h2>
+      <label htmlFor="budget" className="block text-blue-600 font-medium mb-2 text-left">
+        Monto
+      </label>
+      <div className="relative mb-4">
         <input
           id="budget"
           type="number"
-          className="w-full bg-white border border-gray-200 p-2"
-          placeholder="Define tu presupuesto"
+          placeholder="Ej. 10000"
+          className="w-full p-3 rounded-lg border border-blue-200 text-lg focus:ring-2 focus:ring-blue-400 transition pr-10"
+          aria-label="Monto de presupuesto"
           value={budget}
           onChange={(e) => setBudget(e.target.valueAsNumber)}
         />
+        <span className="absolute right-3 top-3 text-blue-400 text-xl">💵</span>
       </div>
-
-      <input
+      <button
         type="submit"
-        value={loading ? "Guardando..." : "Definir Presupuesto"}
-        className="bg-blue-600 hover:bg-blue-700 cursor-pointer w-full p-2 text-white 
-        font-black uppercase disabled:opacity-40"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg mt-6 transition disabled:opacity-40"
         disabled={isValid || loading}
-      />
+      >
+        {loading ? "Guardando..." : "Guardar presupuesto"}
+      </button>
+      {/* Mensaje de validación */}
+      {isValid && (
+        <div className="mt-2 text-red-500 text-sm" aria-live="polite">
+          Por favor ingresa un monto mayor a 0
+        </div>
+      )}
+      {/* Toast de éxito */}
+      {showSuccess && (
+        <div className="mt-4 animate-bounce text-green-600 font-bold text-lg" aria-live="polite">
+          ✅ Presupuesto guardado correctamente
+        </div>
+      )}
+      {/* Toast de error */}
+      {showError && (
+        <div className="mt-4 animate-shake text-red-600 font-bold text-lg" aria-live="polite">
+          ❌ Error al guardar presupuesto
+        </div>
+      )}
     </form>
   );
 }

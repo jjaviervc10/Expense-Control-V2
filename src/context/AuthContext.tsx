@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   // Notificaciones push: manejar registro/desregistro automático
-  const { subscribe, unsubscribe, isSubscribed, loading: notifLoading, error: notifError } = usePushNotifications(token || undefined);
+  const { subscribe, unsubscribe, error: notifError } = usePushNotifications(token || undefined);
 
   // recuperar sesión
   useEffect(() => {

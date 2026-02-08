@@ -8,11 +8,10 @@ import Dashboard from "../pages/Dashboard";
 import AdminLayout from "../pages/admin/AdminLayout";
 import UsersTrialPage from "../pages/admin/UsersTrialPage";
 import UsersPaidPage from "../pages/admin/UsersPaidPage";
-
-// 👇 nuevas
 import Diario from "../pages/gastos/Diario";
 import Semanal from "../pages/gastos/Semanal";
 import Mensual from "../pages/gastos/Mensual";
+import Analisis from '../pages/Analisis';
 
 // ⬇️ instalacion y onboarding
 import InstallPrompt from "../components/InstallPrompt";
@@ -64,6 +63,14 @@ export default function AppRouter() {
         element={
           <ProtectedRoute>
             <Mensual />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analisis"
+        element={
+          <ProtectedRoute>
+            <Analisis />
           </ProtectedRoute>
         }
       />

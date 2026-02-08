@@ -72,7 +72,8 @@ export default function BudgetTracker({ tipo, onResetSuccess }: Props) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/** Contenedor interno con fondo semitranslúcido consistente en todas las vistas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white bg-opacity-80 shadow-lg rounded-lg p-8">
         <div className="flex justify-center">
           <CircularProgressbar
             value={percentage}
