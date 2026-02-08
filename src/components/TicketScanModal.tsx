@@ -61,6 +61,9 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
         {error && <p className="text-red-500 mt-4">{error}</p>}
         {meta && (
           <div className="mt-4">
+            {meta.imageUrl && (
+              <img src={meta.imageUrl} alt="Ticket escaneado" className="w-48 h-auto rounded shadow mb-2 mx-auto" />
+            )}
             <div className="mb-2 text-sm text-gray-700">
               <strong>Comercio:</strong> {meta.comercio} <br />
               <strong>Fecha:</strong> {meta.fecha} <br />

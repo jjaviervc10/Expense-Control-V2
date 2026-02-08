@@ -1,5 +1,5 @@
 // API para enviar path de imagen y userId al backend
-const API_BASE = "https://tu-backend-url/api"; // Cambia por tu backend real
+const API_BASE = "https://expense-control-backend-production-abae.up.railway.app/api"; // Cambia por tu backend real
 
 export async function classifyTicketPath(path: string, userId: string): Promise<any> {
   const res = await fetch(`${API_BASE}/tickets/classify`, {
