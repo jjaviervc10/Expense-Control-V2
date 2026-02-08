@@ -2,6 +2,9 @@
 export async function uploadTicketImage(file: File): Promise<{ imageUrl: string, filePath: string }> {
   const formData = new FormData();
   formData.append('file', file);
+  // Obtener userId del contexto o como argumento
+  const userId = localStorage.getItem('userId');
+  if (userId) formData.append('userId', userId);
 
   const res = await fetch('https://expense-control-backend-production-abae.up.railway.app/api/receipt/upload', {
     method: 'POST',
