@@ -26,7 +26,7 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
     try {
       if (!user) throw new Error('Usuario no autenticado');
       // Subir imagen al backend seguro y obtener imageUrl y filePath
-      const { imageUrl, filePath } = await uploadTicketImage(file);
+      const { imageUrl, filePath } = await uploadTicketImage(file, user.id.toString());
       // Clasificar ticket usando filePath y userId
       const res = await classifyTicketPath(filePath, user.id.toString());
       setProducts(res.data.items || []);

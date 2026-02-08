@@ -1,10 +1,8 @@
 // Subida de imagen de ticket usando el endpoint seguro del backend
-export async function uploadTicketImage(file: File): Promise<{ imageUrl: string, filePath: string }> {
+export async function uploadTicketImage(file: File, userId: string): Promise<{ imageUrl: string, filePath: string }> {
   const formData = new FormData();
   formData.append('file', file);
-  // Obtener userId del contexto o como argumento
-  const userId = localStorage.getItem('userId');
-  if (userId) formData.append('userId', userId);
+  formData.append('userId', userId);
   // Logs para depuración
   console.log('[TicketUpload] file:', file);
   console.log('[TicketUpload] file name:', file.name);
