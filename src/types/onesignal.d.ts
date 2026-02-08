@@ -1,7 +1,1 @@
-declare global {
-  interface Window {
-    OneSignal: any;
-  }
-}
-
-export {};
+// Archivo obsoleto tras eliminar OneSignal

@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import { apiLogin } from "../api/authApi";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 
 interface User {
   id: number;
@@ -31,6 +32,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Notificaciones push: manejar registro/desregistro automático
+  const { subscribe, unsubscribe, isSubscribed, loading: notifLoading, error: notifError } = usePushNotifications(token || undefined);
+
   // recuperar sesión
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -52,16 +56,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       localStorage.setItem("user", JSON.stringify(loggedUser));
       localStorage.setItem("token", data.token);
+      // Ya no llamamos a subscribe aquí, lo movemos a un useEffect
     } finally {
       setLoading(false);
     }
   };
+  // Suscribirse automáticamente cuando el token esté disponible y el usuario esté autenticado
+  useEffect(() => {
+    if (user && token) {
+      // Solo suscribirse si hay usuario y token
+      subscribe()
+        .then(() => {
+          if (notifError) {
+            console.error('[Push] Error al suscribirse:', notifError);
+          } else {
+            console.log('[Push] Suscripción exitosa para usuario:', user.id);
+          }
+        })
+        .catch((err) => {
+          console.error('[Push] Error inesperado en subscribe:', err);
+        });
+    }
+  }, [user, token]);
 
   const logout = () => {
+    // Eliminar suscripción push si existe
+    unsubscribe()
+      .then(() => {
+        console.log('[Push] Suscripción eliminada correctamente en logout');
+      })
+      .catch((err) => {
+        console.error('[Push] Error al eliminar suscripción en logout:', err);
+      });
     setUser(null);
     setToken(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    // Limpiar preferencia de banner de notificaciones
+    localStorage.removeItem("notifBannerDismissed");
   };
 
   return (

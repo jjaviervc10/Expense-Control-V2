@@ -3,9 +3,6 @@ import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import InstallPrompt from "../components/InstallPrompt";
 
-// 🟦 Toast
-import { toast } from "react-toastify";
-
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -14,9 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [appInstalled, setAppInstalled] = useState<boolean | null>(null);
-
   const [showPassword, setShowPassword] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const seenOnboarding = localStorage.getItem("onboardingCompleted");
 
@@ -35,52 +30,7 @@ export default function Login() {
     return () => window.removeEventListener("appinstalled", () => {});
   }, []);
 
-  useEffect(() => {
-    const checkPermission = async () => {
-      if (window.OneSignal) {
-        const permission = await window.OneSignal.Notification.permission;
-        setNotificationsEnabled(permission === "granted");
 
-        // Mostrar toast solo si no ha activado notificaciones
-        if (permission !== "granted") {
-          toast.info("Mantente actualizado con tus finanzas. ¡Activa las notificaciones!");
-        }
-      }
-    };
-
-    checkPermission();
-  }, []);
-
-
-  const handleEnableNotifications = () => {
-  if (typeof window.OneSignal === "undefined") {
-    toast.error("El sistema de notificaciones aún no está listo.");
-    return;
-  }
-  
-
-  window.OneSignal.push(async () => {
-    try {
-      // Mostramos el prompt de OneSignal
-      await window.OneSignal.showSlidedownPrompt();
-
-      const permission = await window.OneSignal.getNotificationPermission();
-      console.log("Permiso de notificaciones:", permission);
-
-      // Si aceptó, guardamos y actualizamos UI
-      if (permission === "granted") {
-        localStorage.setItem("notificationsEnabled", "true");
-        setNotificationsEnabled(true);
-        toast.success("¡Notificaciones activadas con éxito!");
-      } else {
-        toast.info("No se otorgó permiso para notificaciones.");
-      }
-    } catch (error) {
-      console.error("Error al pedir permiso:", error);
-      toast.error("Ocurrió un error al activar notificaciones.");
-    }
-  });
-};
 
   if (appInstalled === null) return null;
 
@@ -123,15 +73,6 @@ export default function Login() {
         <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">
           Iniciar Sesión
         </h1>
-
-        {!notificationsEnabled && (
-          <button
-            onClick={handleEnableNotifications}
-            className="w-full bg-gradient-to-r from-blue-500 to-green-500 text-white py-2 mb-4 rounded-lg font-semibold hover:opacity-90 transition"
-          >
-            Activar Notificaciones 🔔
-          </button>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* EMAIL */}

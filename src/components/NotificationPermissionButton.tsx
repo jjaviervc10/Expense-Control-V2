@@ -1,41 +1,33 @@
-import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 
 export default function NotificationPermissionButton() {
-  const [permission, setPermission] = useState<string | null>(null);
+  const { token } = useAuth();
+  const { permission, isSubscribed, subscribe, unsubscribe, loading, error } = usePushNotifications(token || undefined);
 
-  useEffect(() => {
-    if (window?.OneSignal) {
-      window.OneSignal.getNotificationPermission().then((perm: string) => {
-        setPermission(perm);
-      });
-    }
-  }, []);
-
-  const handleRequestPermission = async () => {
-    if (window?.OneSignal) {
-      try {
-        const status = await window.OneSignal.showSlidedownPrompt();
-        console.log("Permiso solicitado con OneSignal:", status);
-
-        const updatedPermission = await window.OneSignal.getNotificationPermission();
-        setPermission(updatedPermission);
-      } catch (err) {
-        console.error("Error solicitando permiso:", err);
-      }
-    }
-  };
-
-  // No mostrar nada si ya está "granted"
-  if (permission === "granted") return null;
+  if (permission === "granted" && isSubscribed) return null;
 
   return (
     <div className="mt-4 text-center">
-      <button
-        onClick={handleRequestPermission}
-        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition font-semibold"
-      >
-        Activar notificaciones 🔔
-      </button>
+      {permission !== "granted" && (
+        <button
+          onClick={subscribe}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition font-semibold"
+          disabled={loading}
+        >
+          {loading ? "Activando..." : "Activar notificaciones 🔔"}
+        </button>
+      )}
+      {permission === "granted" && isSubscribed && (
+        <button
+          onClick={unsubscribe}
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition font-semibold ml-2"
+          disabled={loading}
+        >
+          {loading ? "Desactivando..." : "Desactivar notificaciones"}
+        </button>
+      )}
+      {error && <div className="text-red-500 mt-2">{error}</div>}
     </div>
   );
 }
