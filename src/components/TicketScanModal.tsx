@@ -2,7 +2,7 @@ import { useState } from "react";
 import TicketUpload from "./TicketUpload";
 import TicketProductList from "./TicketProductList";
 import type { TicketProduct } from "./TicketProductList";
-import { uploadToSupabase } from '../api/supabaseUpload';
+import { uploadTicketImage } from '../api/ticketUploadApi';
 import { useAuth } from '../context/AuthContext';
 import { classifyTicketPath } from '../api/ticketApi';
 
@@ -15,7 +15,7 @@ interface TicketScanModalProps {
 export default function TicketScanModal({ open, onClose, onSave }: TicketScanModalProps) {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<TicketProduct[]>([]);
-  const [meta, setMeta] = useState<{ fecha: string; total: number; moneda: string; comercio: string } | null>(null);
+  const [meta, setMeta] = useState<{ fecha: string; total: number; moneda: string; comercio: string; imageUrl: string } | null>(null);
   const [error, setError] = useState("");
 
   const { user } = useAuth();
@@ -25,16 +25,17 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
     setError("");
     try {
       if (!user) throw new Error('Usuario no autenticado');
-      // Subir imagen a Supabase y obtener path
-      const path = await uploadToSupabase(file, user.id.toString());
-      // Clasificar ticket usando path y userId
-      const res = await classifyTicketPath(path, user.id.toString());
+      // Subir imagen al backend seguro y obtener imageUrl y filePath
+      const { imageUrl, filePath } = await uploadTicketImage(file);
+      // Clasificar ticket usando filePath y userId
+      const res = await classifyTicketPath(filePath, user.id.toString());
       setProducts(res.data.items || []);
       setMeta({
         fecha: res.data.fecha,
         total: res.data.total,
         moneda: res.data.moneda,
         comercio: res.data.comercio,
+        imageUrl // Mostrar la imagen usando la signed URL
       });
     } catch (e: any) {
       setError(e.message || "Error procesando ticket");
