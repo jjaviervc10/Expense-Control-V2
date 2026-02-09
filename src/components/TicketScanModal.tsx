@@ -28,10 +28,13 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
       if (!file || !(file instanceof File) || file.size === 0) {
         throw new Error('Debes seleccionar una imagen válida para subir el ticket.');
       }
+      console.log('[TicketScanModal] Iniciando subida de ticket:', { file, userId: user.id });
       // Subir imagen al backend seguro y obtener imageUrl y filePath
       const { imageUrl, filePath } = await uploadTicketImage(file, user.id.toString());
+      console.log('[TicketScanModal] Imagen subida. imageUrl:', imageUrl, 'filePath:', filePath);
       // Clasificar ticket usando filePath y userId
       const res = await classifyTicketPath(filePath, user.id.toString());
+      console.log('[TicketScanModal] Clasificación recibida:', res);
       setProducts(res.data.items || []);
       setMeta({
         fecha: res.data.fecha,
@@ -41,6 +44,7 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
         imageUrl // Mostrar la imagen usando la signed URL
       });
     } catch (e: any) {
+      console.error('[TicketScanModal] Error en flujo de ticket:', e);
       setError(e.message || "Error procesando ticket");
     } finally {
       setLoading(false);
