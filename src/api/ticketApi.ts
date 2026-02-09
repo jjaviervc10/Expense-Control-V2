@@ -1,15 +1,15 @@
 // API para enviar path de imagen y userId al backend
-const API_BASE = "https://expense-control-backend-production-abae.up.railway.app/api"; // Cambia por tu backend real
+const API_BASE = "https://expense-control-backend-production-abae.up.railway.app/api";
 
 export async function classifyTicketPath(path: string, userId: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/receipt/upload`, {
+  const res = await fetch(`${API_BASE}/receipt/process`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ path, userId }), // Si el backend espera formData, ajustar aquí
+    body: JSON.stringify({ imagePath: path, userId: Number(userId) }),
   });
 
-  if (!res.ok) throw new Error('Error subiendo ticket');
-  return await res.json(); // { signedUrl, ...otrosDatos }
+  if (!res.ok) throw new Error('Error clasificando ticket');
+  return await res.json(); // { message, data: { fecha, total, moneda, comercio, items } }
 }
