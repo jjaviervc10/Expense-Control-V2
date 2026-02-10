@@ -51,8 +51,8 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 w-screen h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl min-h-[80vh] flex flex-col">
         <h2 className="text-xl font-bold mb-4">Escanear Ticket</h2>
         <TicketUpload
           onImageUploaded={handleImageUploaded}

@@ -26,8 +26,7 @@ export default function TicketUpload({ onImageUploaded, imagePath, onTicketProce
   // Procesa el ticket cuando imagePath cambia
   React.useEffect(() => {
     if (imagePath && token) {
-      console.log('[TicketUpload] JWT token antes de procesar:', token);
-      console.log('[TicketUpload] imagePath:', imagePath);
+      // ...existing code...
       setProcessing(true);
       setError(null);
       setResult(null);
@@ -57,12 +56,7 @@ export default function TicketUpload({ onImageUploaded, imagePath, onTicketProce
           setProcessing(false);
         });
     } else {
-      if (!token) {
-        console.error('[TicketUpload] ERROR: token JWT no disponible');
-      }
-      if (!imagePath) {
-        console.error('[TicketUpload] ERROR: imagePath no disponible');
-      }
+      // ...existing code...
     }
   }, [imagePath, token, onTicketProcessed]);
 
