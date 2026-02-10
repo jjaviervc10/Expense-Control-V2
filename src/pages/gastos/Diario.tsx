@@ -47,31 +47,18 @@ export default function Diario() {
   // Handler para guardar gastos escaneados
   const { token } = useBudget();
   const handleSaveScan = async (products: TicketProduct[], meta: { fecha: string; total: number; moneda: string; comercio: string }) => {
-    for (const product of products) {
-      try {
-        const gasto = await postGasto(token ?? '', {
+    try {
+      await Promise.all(products.map(async (product) => {
+        await postGasto(token ?? '', {
           tipo: 'diario',
           categoria: product.category,
           monto: product.amount,
           fecha: meta.fecha,
         });
-        dispatch({
-          type: 'add-expense',
-          payload: {
-            expense: {
-              id: gasto.id || `${Date.now()}-${Math.random()}`,
-              expenseName: product.name,
-              amount: product.amount,
-              category: product.category,
-              date: new Date(meta.fecha),
-              range: 'diario',
-            }
-          }
-        });
-      } catch (err) {
-        // Puedes mostrar un error o ignorar
-        console.error('Error registrando gasto escaneado:', err);
-      }
+      }));
+      setRefresh(prev => prev + 1); // Refresca el listado desde backend
+    } catch (err) {
+      console.error('Error registrando gasto escaneado:', err);
     }
   };
 
