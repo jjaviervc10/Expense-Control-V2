@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useBudget } from "../hooks/useBudget";
+import { useGastosPorTipo } from "../hooks/useGastosPorTipo";
 import AmountDisplay from "./AmountDisplay";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -13,12 +14,13 @@ type Props = {
   onResetSuccess: () => void;
 };
 
-export default function BudgetTracker({ tipo, onResetSuccess }: Props) {
-  const { totalExpenses, dispatch } = useBudget();
+  const { dispatch } = useBudget();
   const { montoLimite, loading, error, refetch } = usePresupuestoActivo(tipo);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { gastos, loading: loadingGastos } = useGastosPorTipo(tipo, 0);
+  const totalExpenses = gastos.reduce((acc, e) => acc + e.amount, 0);
 
-  if (loading) return <p className="text-center">Cargando presupuesto...</p>;
+  if (loading || loadingGastos) return <p className="text-center">Cargando presupuesto...</p>;
 
   if (error || montoLimite === null)
     return (
