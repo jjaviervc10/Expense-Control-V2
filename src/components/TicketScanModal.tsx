@@ -1,6 +1,8 @@
 import { useState } from "react";
 import TicketUpload from "./TicketUpload";
-import TicketProductList from "./TicketProductList";
+import TicketInfo from "./TicketInfo";
+import ErrorBanner from "./ErrorBanner";
+import ProductEditList from "./ProductEditList";
 import type { TicketProduct } from "./TicketProductList";
 import { uploadTicketImage } from '../api/ticketUploadApi';
 import { useAuth } from '../context/AuthContext';
@@ -81,17 +83,13 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
               }}
             />
             {loading && <p className="text-blue-600 mt-4">Procesando ticket...</p>}
-            {error && <p className="text-red-500 mt-4">{error}</p>}
+            {error && <ErrorBanner message={error} />}
             {meta && (
               <div className="mt-4">
                 {meta.imageUrl && (
                   <img src={meta.imageUrl} alt="Ticket escaneado" className="w-48 h-auto rounded shadow mb-2 mx-auto" />
                 )}
-                <div className="mb-2 text-sm text-gray-700">
-                  <strong>Comercio:</strong> {meta.comercio} <br />
-                  <strong>Fecha:</strong> {meta.fecha} <br />
-                  <strong>Total:</strong> {meta.total} {meta.moneda}
-                </div>
+                <TicketInfo comercio={meta.comercio} fecha={meta.fecha} total={meta.total} />
                 <div className="mt-2 text-xs text-gray-500">Pulsa "Clasificación" para editar los gastos</div>
               </div>
             )}
@@ -100,7 +98,11 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
         {/* Step 1: edición/clasificación */}
         {step === 1 && meta && (
           <div className="mt-4">
-            <TicketProductList products={products} onChange={setProducts} />
+            <div className="overflow-y-auto max-h-[300px] pr-2">
+              <ProductEditList productos={products} onChange={(idx, categoria) => {
+                setProducts(products => products.map((p, i) => i === idx ? { ...p, categoria } : p));
+              }} />
+            </div>
             <button
               className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"
               onClick={handleSave}

@@ -1,0 +1,94 @@
+// ticket-processing-ui-layout.txt
+
+============================
+🧾 DISEÑO MODULARIZADO PARA TICKETSCANMODAL
+============================
+
+// TicketScanModal.tsx (estructura base)
+import TicketInfo from "./TicketInfo";
+import ErrorBanner from "./ErrorBanner";
+import ProductEditList from "./ProductEditList";
+
+export default function TicketScanModal({ open, onClose, onSave, productos, meta, error }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 w-full h-full">
+      <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col space-y-4">
+        {/* Botón de cierre */}
+        <button className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700" onClick={onClose}>
+          ×
+        </button>
+
+        {/* Sección 1: Metadata del ticket */}
+        <TicketInfo comercio={meta.comercio} fecha={meta.fecha} total={meta.total} />
+
+        {/* Sección 2: Mensaje de error */}
+        {error && <ErrorBanner message={error} />}
+
+        {/* Sección 3: Productos (scrollable) */}
+        <div className="overflow-y-auto max-h-[300px] pr-2 scrollable-section">
+          <ProductEditList productos={productos} onChange={/* ... */} />
+        </div>
+
+        {/* Sección 4: Botón guardar */}
+        <div className="flex justify-end">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" onClick={onSave}>
+            Guardar gastos
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// TicketInfo.tsx
+export default function TicketInfo({ comercio, fecha, total }) {
+  return (
+    <div className="mb-2 text-sm text-gray-700">
+      <strong>Comercio:</strong> {comercio} <br />
+      <strong>Fecha:</strong> {fecha} <br />
+      <strong>Total:</strong> {total} MXN
+    </div>
+  );
+}
+
+// ErrorBanner.tsx
+export default function ErrorBanner({ message }) {
+  return (
+    <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-2">
+      {message}
+    </div>
+  );
+}
+
+// ProductEditList.tsx
+export default function ProductEditList({ productos, onChange }) {
+  return (
+    <div>
+      {productos.map((producto, idx) => (
+        <div key={idx} className="flex items-center justify-between bg-white shadow p-2 rounded mb-2">
+          <span>{producto.nombre}</span>
+          <span>${producto.precio}</span>
+          <select value={producto.categoria} onChange={e => onChange(idx, e.target.value)}>
+            {/* Opciones de categoría */}
+          </select>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+============================
+📱 RESPONSIVIDAD Y ACCESIBILIDAD
+============================
+- Modal compacto, scroll solo en productos.
+- Botón de cierre accesible.
+- Separación clara de secciones.
+- Fácil de mantener y escalar.
+
+============================
+🎯 OBJETIVO FINAL
+============================
+- Mejor UX, claridad visual, edición fácil.
+- Adaptable a cualquier pantalla.
