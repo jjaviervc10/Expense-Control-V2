@@ -4,7 +4,6 @@ import TicketProductList from "./TicketProductList";
 import type { TicketProduct } from "./TicketProductList";
 import { uploadTicketImage } from '../api/ticketUploadApi';
 import { useAuth } from '../context/AuthContext';
-import { classifyTicketPath } from '../api/ticketApi';
 
 interface TicketScanModalProps {
   open: boolean;

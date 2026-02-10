@@ -1,14 +1,14 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { processTicketReceipt } from "../api/receiptProcessApi";
 
+interface TicketUploadProps {
   onImageUploaded: (file: File) => void;
   imagePath?: string; // ruta de la imagen subida
-    onTicketProcessed?: (items: any[], meta: any) => void;
+  onTicketProcessed?: (items: any[], meta: any) => void;
 }
 
-export default function TicketUpload({ onImageUploaded, imagePath }: TicketUploadProps) {
-  export default function TicketUpload({ onImageUploaded, imagePath, onTicketProcessed }: TicketUploadProps) {
+export default function TicketUpload({ onImageUploaded, imagePath, onTicketProcessed }: TicketUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
