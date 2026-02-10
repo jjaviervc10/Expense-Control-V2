@@ -61,6 +61,7 @@ export default function Mensual() {
         });
       }));
       setRefresh(prev => prev + 1); // Refresca el listado desde backend
+      refetchPresupuesto(); // Refresca el presupuesto y el círculo
     } catch (err) {
       console.error('Error registrando gasto escaneado:', err);
     }
