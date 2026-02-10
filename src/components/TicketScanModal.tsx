@@ -20,6 +20,9 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
 
   const { user } = useAuth();
 
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
   const handleImageUploaded = async (file: File) => {
     setLoading(true);
     setError("");
@@ -28,23 +31,11 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
       if (!file || !(file instanceof File) || file.size === 0) {
         throw new Error('Debes seleccionar una imagen válida para subir el ticket.');
       }
-      console.log('[TicketScanModal] Iniciando subida de ticket:', { file, userId: user.id });
       // Subir imagen al backend seguro y obtener imageUrl y filePath
       const { imageUrl, filePath } = await uploadTicketImage(file, user.id.toString());
-      console.log('[TicketScanModal] Imagen subida. imageUrl:', imageUrl, 'filePath:', filePath);
-      // Clasificar ticket usando filePath y userId
-      const res = await classifyTicketPath(filePath, user.id.toString());
-      console.log('[TicketScanModal] Clasificación recibida:', res);
-      setProducts(res.data.items || []);
-      setMeta({
-        fecha: res.data.fecha,
-        total: res.data.total,
-        moneda: res.data.moneda,
-        comercio: res.data.comercio,
-        imageUrl // Mostrar la imagen usando la signed URL
-      });
+      setImagePath(filePath);
+      setImageUrl(imageUrl);
     } catch (e: any) {
-      console.error('[TicketScanModal] Error en flujo de ticket:', e);
       setError(e.message || "Error procesando ticket");
     } finally {
       setLoading(false);
@@ -64,7 +55,14 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
         <h2 className="text-xl font-bold mb-4">Escanear Ticket</h2>
-        <TicketUpload onImageUploaded={handleImageUploaded} />
+        <TicketUpload
+          onImageUploaded={handleImageUploaded}
+          imagePath={imagePath ?? undefined}
+          onTicketProcessed={(items, metaData) => {
+            setProducts(items);
+            setMeta({ ...metaData, imageUrl: imageUrl ?? "" });
+          }}
+        />
         {loading && <p className="text-blue-600 mt-4">Procesando ticket...</p>}
         {error && <p className="text-red-500 mt-4">{error}</p>}
         {meta && (
