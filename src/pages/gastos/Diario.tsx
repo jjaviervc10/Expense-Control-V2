@@ -12,6 +12,7 @@ import ExpenseModal from "../../components/ExpenseModal";
 import FilterByCategory from "../../components/FilterByCategory";
 import TicketScanModal from '../../components/TicketScanModal';
 import type { TicketProduct } from '../../components/TicketProductList';
+import { postGasto } from '../../api/gastoApi';
 import AnimatedFinanceBackground from '../../components/AnimatedFinanceBackground';
 
 import { usePresupuestoActivo } from "../../hooks/usePresupuestoActivo";
@@ -44,22 +45,34 @@ export default function Diario() {
   }, [state.expenses]);
 
   // Handler para guardar gastos escaneados
-  const handleSaveScan = (products: TicketProduct[], meta: { fecha: string; total: number; moneda: string; comercio: string }) => {
-    products.forEach(product => {
-      dispatch({
-        type: 'add-expense',
-        payload: {
-          expense: {
-            id: `${Date.now()}-${Math.random()}`,
-            expenseName: product.name,
-            amount: product.amount,
-            category: product.category,
-            date: new Date(meta.fecha),
-            range: 'diario',
+  const { token } = useBudget();
+  const handleSaveScan = async (products: TicketProduct[], meta: { fecha: string; total: number; moneda: string; comercio: string }) => {
+    for (const product of products) {
+      try {
+        const gasto = await postGasto(token ?? '', {
+          tipo: 'diario',
+          categoria: product.category,
+          monto: product.amount,
+          fecha: meta.fecha,
+        });
+        dispatch({
+          type: 'add-expense',
+          payload: {
+            expense: {
+              id: gasto.id || `${Date.now()}-${Math.random()}`,
+              expenseName: product.name,
+              amount: product.amount,
+              category: product.category,
+              date: new Date(meta.fecha),
+              range: 'diario',
+            }
           }
-        }
-      });
-    });
+        });
+      } catch (err) {
+        // Puedes mostrar un error o ignorar
+        console.error('Error registrando gasto escaneado:', err);
+      }
+    }
   };
 
   return (

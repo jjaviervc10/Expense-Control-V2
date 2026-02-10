@@ -99,9 +99,14 @@ export default function TicketScanModal({ open, onClose, onSave }: TicketScanMod
         {step === 1 && meta && (
           <div className="mt-4">
             <div className="overflow-y-auto max-h-[300px] pr-2">
-              <ProductEditList productos={products} onChange={(idx, categoria) => {
-                setProducts(products => products.map((p, i) => i === idx ? { ...p, categoria } : p));
-              }} />
+              <ProductEditList
+                productos={products}
+                onChange={(idx, categoria) => {
+                  setProducts(products =>
+                    products.map((p, i) => i === idx ? { ...p, category: categoria } : p)
+                  );
+                }}
+              />
             </div>
             <button
               className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"

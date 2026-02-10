@@ -1,6 +1,7 @@
 import { useContext, useMemo } from "react";
 import { BudgetContext } from "../context/BudgetContext";
 import type { Expense } from "../types";
+import { useAuth } from "../context/AuthContext";
 
 export const useBudget = () => {
   const context = useContext(BudgetContext);
@@ -9,6 +10,7 @@ export const useBudget = () => {
     throw new Error("useBudget must be used within a BudgetProvider");
   }
 
+  const { token } = useAuth();
   const { state, dispatch } = context;
 
   /* ==========================
@@ -49,6 +51,7 @@ export const useBudget = () => {
     filteredExpenses,
     currentBudget,
     totalExpenses,
-    remainingBudget
+    remainingBudget,
+    token,
   };
 };
