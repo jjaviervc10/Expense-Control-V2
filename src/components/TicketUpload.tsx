@@ -26,27 +26,29 @@ export default function TicketUpload({ onImageUploaded, imagePath, onTicketProce
   // Procesa el ticket cuando imagePath cambia
   React.useEffect(() => {
     if (imagePath && token) {
+      console.log('[TicketUpload] JWT token antes de procesar:', token);
+      console.log('[TicketUpload] imagePath:', imagePath);
       setProcessing(true);
       setError(null);
       setResult(null);
       processTicketReceipt(imagePath, token)
         .then(res => {
           setResult(res);
-            if (onTicketProcessed && res.data?.items) {
-              onTicketProcessed(
-                res.data.items.map((item: any) => ({
-                  name: item.nombre,
-                  amount: item.precio,
-                  category: item.categoria
-                })),
-                {
-                  comercio: res.data.comercio,
-                  fecha: res.data.fecha,
-                  total: res.data.total,
-                  moneda: res.data.moneda
-                }
-              );
-            }
+          if (onTicketProcessed && res.data?.items) {
+            onTicketProcessed(
+              res.data.items.map((item: any) => ({
+                name: item.nombre,
+                amount: item.precio,
+                category: item.categoria
+              })),
+              {
+                comercio: res.data.comercio,
+                fecha: res.data.fecha,
+                total: res.data.total,
+                moneda: res.data.moneda
+              }
+            );
+          }
         })
         .catch(err => {
           setError(err.message);
@@ -54,8 +56,15 @@ export default function TicketUpload({ onImageUploaded, imagePath, onTicketProce
         .finally(() => {
           setProcessing(false);
         });
+    } else {
+      if (!token) {
+        console.error('[TicketUpload] ERROR: token JWT no disponible');
+      }
+      if (!imagePath) {
+        console.error('[TicketUpload] ERROR: imagePath no disponible');
+      }
     }
-  }, [imagePath, token]);
+  }, [imagePath, token, onTicketProcessed]);
 
   return (
     <div className="flex flex-col items-center gap-4">
