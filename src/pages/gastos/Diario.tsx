@@ -13,6 +13,7 @@ import FilterByCategory from "../../components/FilterByCategory";
 import TicketScanModal from '../../components/TicketScanModal';
 import type { TicketProduct } from '../../components/TicketProductList';
 import { postGasto } from '../../api/gastoApi';
+import { categories } from '../../data/categories';
 import AnimatedFinanceBackground from '../../components/AnimatedFinanceBackground';
 
 import { usePresupuestoActivo } from "../../hooks/usePresupuestoActivo";
@@ -49,9 +50,11 @@ export default function Diario() {
   const handleSaveScan = async (products: TicketProduct[], meta: { fecha: string; total: number; moneda: string; comercio: string }) => {
     try {
       await Promise.all(products.map(async (product) => {
+        const cat = categories.find(c => c.name === product.category);
+        if (!cat) throw new Error('Categoría inválida');
         await postGasto(token ?? '', {
           tipo: 'diario',
-          categoria: product.category,
+          categoria: cat.id,
           monto: product.amount,
           fecha: meta.fecha,
         });
