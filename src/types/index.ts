@@ -6,6 +6,7 @@ export type Expense = {
   category: string
   date: Date
   range: ReportRange        // ✅ CLAVE
+  favorito?: boolean        // ✅ Para sistema de plantillas
 }
 
 

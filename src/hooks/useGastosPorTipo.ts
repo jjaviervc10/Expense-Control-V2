@@ -25,6 +25,7 @@ export function useGastosPorTipo(tipo: string, refresh: number) {
           category: g.categoria ?? "",
           date: g.fecha ? new Date(g.fecha) : new Date(),
           range: g.tipo as any,
+          favorito: g.favorito ?? false,
         }));
 
         setGastos(listaNormalizada);
