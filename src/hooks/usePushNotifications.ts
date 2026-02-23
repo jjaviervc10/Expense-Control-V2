@@ -141,12 +141,16 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
       const device_type = getDeviceType();
       console.log('[Push] 📱 Tipo de dispositivo detectado:', device_type);
 
-      // Preparar payload con device_type
+      // Obtener los datos de la suscripción
+      const subscriptionJSON = subscription.toJSON();
+      
+      // Preparar payload estructurado exactamente como el backend espera
       const payload = {
-        ...subscription.toJSON(),
+        endpoint: subscription.endpoint,
+        keys: subscriptionJSON.keys || {},
         device_type: device_type,
       };
-      console.log('[Push] Payload con device_type:', payload);
+      console.log('[Push] Payload estructurado con device_type:', JSON.stringify(payload, null, 2));
 
       // Registrar en backend
       console.log('[Push] Enviando suscripción al backend:', `${API_BASE}/api/notifications/subscribe`);
