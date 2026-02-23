@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = "https://expense-control-backend-pruebas.up.railway.app";
-
 // Función para detectar el tipo de dispositivo
 function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
   const ua = navigator.userAgent;
@@ -128,54 +126,46 @@ export default function PushDebugPanel() {
 
 
   const checkBackendSubscription = async () => {
-    console.log('[Debug Panel] Verificando suscripción en el backend...');
+    console.log('[Debug Panel] 🚀 Simulando envío de notificación desde cron job...');
     setIsLoading(true);
     setTestMessage(null);
     
     try {
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
-
-      const reg = await navigator.serviceWorker.getRegistration('/sw.js');
-      if (!reg) {
-        throw new Error('Service Worker no registrado');
-      }
-
-      const sub = await reg.pushManager.getSubscription();
-      if (!sub) {
-        throw new Error('No hay suscripción activa en el navegador');
-      }
-
-      const currentEndpoint = sub.endpoint;
-      console.log('[Debug Panel] Endpoint actual del navegador:', currentEndpoint);
-
-      // Verificar en el backend
-      console.log('[Debug Panel] Consultando backend:', `${API_BASE}/api/notifications/check`);
-      const response = await fetch(`${API_BASE}/api/notifications/check`, {
+      const CRON_TOKEN = '798a0cd9217f642949c4faed7ca51533df8322aa88412b8f909c120ee5afe45a';
+      const BACKEND_URL = 'https://expense-control-backend-production-6b4a.up.railway.app';
+      
+      console.log('[Debug Panel] Llamando al endpoint del cron:', `${BACKEND_URL}/api/notifications/cron/send`);
+      console.log('[Debug Panel] Payload:', { tipo: 'recordatorio', slot: '3pm' });
+      
+      const response = await fetch(`${BACKEND_URL}/api/notifications/cron/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${CRON_TOKEN}`,
         },
-        body: JSON.stringify({ endpoint: currentEndpoint }),
+        body: JSON.stringify({
+          tipo: 'recordatorio',
+          slot: '3pm'
+        }),
       });
 
+      console.log('[Debug Panel] Response status:', response.status);
+      
       const data = await response.json();
       console.log('[Debug Panel] Response del backend:', data);
 
-      if (data.exists) {
-        console.log('[Debug Panel] ✅ Suscripción encontrada en el backend');
-        setTestMessage(`✅ Suscripción en BD (activa: ${data.subscripcion?.activo ? 'Sí' : 'No'})`);
+      if (response.ok) {
+        console.log('[Debug Panel] ✅ Notificación enviada exitosamente');
+        setTestMessage(`✅ Cron ejecutado. Enviadas: ${data.sent || 0}, Fallidas: ${data.failed || 0}`);
       } else {
-        console.log('[Debug Panel] ❌ Suscripción NO encontrada en el backend');
-        setTestMessage('❌ Suscripción NO está en la BD');
+        console.log('[Debug Panel] ❌ Error al enviar notificación');
+        setTestMessage(`❌ Error: ${data.error || data.message || 'Error desconocido'}`);
       }
-      setTimeout(() => setTestMessage(null), 5000);
+      setTimeout(() => setTestMessage(null), 8000);
     } catch (error: any) {
-      console.error('[Debug Panel] ❌ Error al verificar suscripción:', error);
+      console.error('[Debug Panel] ❌ Error al simular cron:', error);
       setTestMessage(`❌ Error: ${error.message}`);
-      setTimeout(() => setTestMessage(null), 5000);
+      setTimeout(() => setTestMessage(null), 8000);
     } finally {
       setIsLoading(false);
     }
@@ -266,8 +256,8 @@ export default function PushDebugPanel() {
       <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs">
         <strong className="text-blue-800 dark:text-blue-200">ℹ️ Sobre las notificaciones:</strong>
         <p className="text-blue-700 dark:text-blue-300 mt-1">
-          Las notificaciones se envían automáticamente por el cron job del backend a las horas programadas. 
-          Si estás suscrito correctamente, las recibirás cuando el sistema las envíe.
+          Las notificaciones se envían automáticamente por el cron job a las horas programadas. 
+          Usa el botón "🚀 Simular Cron Job" para forzar el envío inmediato y probar que tu dispositivo las recibe.
         </p>
       </div>
 
@@ -290,10 +280,10 @@ export default function PushDebugPanel() {
         
         <button
           onClick={checkBackendSubscription}
-          className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded font-semibold text-sm disabled:opacity-50"
-          disabled={!token || !debugInfo.hasActiveSubscription || isLoading}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded font-semibold text-sm disabled:opacity-50"
+          disabled={isLoading}
         >
-          {isLoading ? '⏳ Verificando...' : '🔍 Verificar en BD'}
+          {isLoading ? '⏳ Enviando...' : '🚀 Simular Cron Job (Enviar Notif.)'}
         </button>
         
         <button
