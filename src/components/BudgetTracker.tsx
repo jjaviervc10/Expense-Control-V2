@@ -14,6 +14,7 @@ type Props = {
   onResetSuccess: () => void;
 };
 
+export default function BudgetTracker({ tipo, onResetSuccess }: Props) {
   const { dispatch } = useBudget();
   const { montoLimite, loading, error, refetch } = usePresupuestoActivo(tipo);
   const [confirmOpen, setConfirmOpen] = useState(false);

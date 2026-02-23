@@ -1,0 +1,40 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">
+  <defs>
+    <!-- Gradiente comercial azul -->
+    <linearGradient id="ropaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"></stop>
+      <stop offset="100%" stop-color="#1D4ED8"></stop>
+    </linearGradient>
+
+    <!-- Sombra suave -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.18"></feDropShadow>
+    </filter>
+  </defs>
+
+  <!-- Camiseta estilo comercial -->
+  <g filter="url(#shadow)">
+    <!-- Forma principal -->
+    <path d="M115 140
+         L145 110
+         H215
+         L245 140
+         L285 165
+         L260 215
+         L230 195
+         V295
+         H130
+         V195
+         L100 215
+         L75 165
+         Z" fill="url(#ropaGradient)"></path>
+
+    <!-- Cuello -->
+    <path d="M160 110
+         C165 135, 195 135, 200 110" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"></path>
+
+    <!-- Línea central sutil -->
+    <line x1="180" y1="150" x2="180" y2="295" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="6"></line>
+  </g>
+</svg>

@@ -1,0 +1,46 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">
+  <defs>
+    <!-- Gradiente principal -->
+    <linearGradient id="boxFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"></stop>
+      <stop offset="100%" stop-color="#D97706"></stop>
+    </linearGradient>
+
+    <!-- Cara lateral -->
+    <linearGradient id="boxSide" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDBA74"></stop>
+      <stop offset="100%" stop-color="#EA580C"></stop>
+    </linearGradient>
+
+    <!-- Tapa superior -->
+    <linearGradient id="boxTop" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FED7AA"></stop>
+      <stop offset="100%" stop-color="#FB923C"></stop>
+    </linearGradient>
+
+    <!-- Sombra -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.2"></feDropShadow>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    
+    <!-- Cara frontal -->
+    <path d="M110 160 L110 270 L190 310 L190 200 Z" fill="url(#boxFront)"></path>
+
+    <!-- Cara lateral -->
+    <path d="M190 200 L190 310 L270 270 L270 160 Z" fill="url(#boxSide)"></path>
+
+    <!-- Parte superior -->
+    <path d="M110 160 L190 120 L270 160 L190 200 Z" fill="url(#boxTop)"></path>
+
+    <!-- Línea central -->
+    <line x1="190" y1="120" x2="190" y2="200" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="6"></line>
+
+    <!-- Etiqueta decorativa -->
+    <rect x="145" y="215" width="30" height="18" rx="4" fill="#FFFFFF" opacity="0.25"></rect>
+
+  </g>
+</svg>
