@@ -3,6 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 // URL base del backend en Railway
 const API_BASE = "https://expense-control-backend-pruebas.up.railway.app";
 
+// Utilidad para detectar el tipo de dispositivo
+function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
+  const ua = navigator.userAgent;
+  if (/Mobi|Android/i.test(ua)) return 'mobile';
+  if (/Tablet|iPad/i.test(ua)) return 'tablet';
+  return 'desktop';
+}
+
 // Utilidad para convertir la clave VAPID a Uint8Array
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -32,16 +40,43 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
 
   // Verifica si ya existe una suscripción activa
   const checkSubscription = useCallback(async () => {
-    if (!('serviceWorker' in navigator)) return;
+    console.log('[Push] Verificando suscripción activa...');
+    if (!('serviceWorker' in navigator)) {
+      console.warn('[Push] Service Worker no soportado en este navegador');
+      return;
+    }
     const reg = await navigator.serviceWorker.getRegistration('/sw.js');
-    if (!reg) return setIsSubscribed(false);
+    if (!reg) {
+      console.log('[Push] No hay Service Worker registrado');
+      return setIsSubscribed(false);
+    }
+    console.log('[Push] Service Worker encontrado:', reg);
     const sub = await reg.pushManager.getSubscription();
+    console.log('[Push] Estado de suscripción:', sub ? 'Suscrito' : 'No suscrito');
+    if (sub) {
+      console.log('[Push] Detalles de suscripción:', {
+        endpoint: sub.endpoint,
+        expirationTime: sub.expirationTime,
+        keys: {
+          p256dh: sub.toJSON().keys?.p256dh?.substring(0, 20) + '...',
+          auth: sub.toJSON().keys?.auth?.substring(0, 20) + '...'
+        }
+      });
+    }
     setIsSubscribed(!!sub);
   }, []);
 
   useEffect(() => {
+    console.log('[Push] Inicializando hook, permiso actual:', Notification.permission);
     setPermission(Notification.permission);
     checkSubscription();
+    
+    // Log del estado del Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        console.log('[Push] Service Worker listo:', reg.active?.state);
+      });
+    }
   }, [checkSubscription]);
 
   // Solicita permisos y registra la suscripción en backend
@@ -54,13 +89,28 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
       if (!userJwt) throw new Error('Usuario no autenticado');
 
       // Solicitar permiso
+      console.log('[Push] Solicitando permiso de notificaciones...');
       const perm = await Notification.requestPermission();
+      console.log('[Push] Permiso obtenido:', perm);
       setPermission(perm);
-      if (perm !== 'granted') throw new Error('Permiso denegado');
+      if (perm !== 'granted') {
+        console.error('[Push] Permiso denegado por el usuario');
+        throw new Error('Permiso denegado');
+      }
 
       // Registrar SW si no está
       let reg = await navigator.serviceWorker.getRegistration('/sw.js');
-      if (!reg) reg = await navigator.serviceWorker.register('/sw.js');
+      if (!reg) {
+        console.log('[Push] Service Worker no encontrado, registrando /sw.js...');
+        reg = await navigator.serviceWorker.register('/sw.js');
+        console.log('[Push] Service Worker registrado exitosamente');
+      } else {
+        console.log('[Push] Service Worker ya estaba registrado');
+      }
+      
+      // Esperar a que el SW esté activo
+      await navigator.serviceWorker.ready;
+      console.log('[Push] Service Worker está activo y listo');
 
       // Obtener clave pública VAPID
       console.log('[Push] Solicitando clave pública VAPID...');
@@ -71,7 +121,11 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
         throw new Error('No se pudo obtener la clave pública');
       }
       const { publicKey } = await vapidRes.json();
-      if (!publicKey) throw new Error('Clave pública inválida');
+      console.log('[Push] Clave pública VAPID recibida:', publicKey.substring(0, 30) + '...');
+      if (!publicKey) {
+        console.error('[Push] Clave pública está vacía o es inválida');
+        throw new Error('Clave pública inválida');
+      }
 
       // Suscribirse
       console.log('[Push] Suscribiéndose con pushManager...');
@@ -79,7 +133,20 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
-      console.log('[Push] Subscription object:', subscription);
+      console.log('[Push] ✅ Suscripción creada exitosamente');
+      console.log('[Push] Endpoint:', subscription.endpoint);
+      console.log('[Push] Subscription completa:', JSON.stringify(subscription.toJSON(), null, 2));
+
+      // Detectar tipo de dispositivo
+      const device_type = getDeviceType();
+      console.log('[Push] 📱 Tipo de dispositivo detectado:', device_type);
+
+      // Preparar payload con device_type
+      const payload = {
+        ...subscription.toJSON(),
+        device_type: device_type,
+      };
+      console.log('[Push] Payload con device_type:', payload);
 
       // Registrar en backend
       console.log('[Push] Enviando suscripción al backend:', `${API_BASE}/api/notifications/subscribe`);
@@ -89,7 +156,7 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userJwt}`,
         },
-        body: JSON.stringify(subscription),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -97,8 +164,10 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
         throw new Error('No se pudo registrar la suscripción');
       }
       const backendResp = await res.json();
-      console.log('[Push] Respuesta del backend:', backendResp);
+      console.log('[Push] ✅ Suscripción guardada en backend:', backendResp);
+      console.log('[Push] Usuario ID del backend:', backendResp.idusuario || 'No disponible');
       setIsSubscribed(true);
+      console.log('[Push] ========== SUSCRIPCIÓN COMPLETADA ==========');
     } catch (err: any) {
       setError(err.message || 'Error al suscribirse');
       console.error('[Push] Error en subscribe:', err);
@@ -109,6 +178,7 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
 
   // Elimina la suscripción en backend y navegador
   const unsubscribe = useCallback(async () => {
+    console.log('[Push] Iniciando proceso de desuscripción...');
     setLoading(true);
     setError(null);
     try {
@@ -117,7 +187,11 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
       const reg = await navigator.serviceWorker.getRegistration('/sw.js');
       if (!reg) throw new Error('No hay Service Worker registrado');
       const sub = await reg.pushManager.getSubscription();
-      if (!sub) throw new Error('No hay suscripción activa');
+      if (!sub) {
+        console.warn('[Push] No hay suscripción activa para eliminar');
+        throw new Error('No hay suscripción activa');
+      }
+      console.log('[Push] Suscripción encontrada, endpoint:', sub.endpoint);
       // Eliminar en backend
       const res = await fetch(`${API_BASE}/api/notifications/unsubscribe`, {
         method: 'POST',
@@ -127,11 +201,17 @@ export function usePushNotifications(userJwt?: string): UsePushNotifications {
         },
         body: JSON.stringify({ endpoint: sub.endpoint }),
       });
-      if (!res.ok) throw new Error('No se pudo eliminar la suscripción en backend');
+      if (!res.ok) {
+        console.error('[Push] Error al eliminar suscripción del backend');
+        throw new Error('No se pudo eliminar la suscripción en backend');
+      }
+      console.log('[Push] Suscripción eliminada del backend');
       // Eliminar en navegador
       await sub.unsubscribe();
+      console.log('[Push] ✅ Suscripción eliminada del navegador');
       setIsSubscribed(false);
     } catch (err: any) {
+      console.error('[Push] ❌ Error al desuscribirse:', err);
       setError(err.message || 'Error al desuscribirse');
     } finally {
       setLoading(false);

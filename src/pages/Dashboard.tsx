@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import { CalendarDaysIcon, CalendarIcon, ChartBarIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import AnimatedFinanceBackground from '../components/AnimatedFinanceBackground';
+import PushDebugPanel from '../components/PushDebugPanel';
 
 export default function Dashboard() {
   useEffect(() => {
@@ -182,6 +183,9 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+      
+      {/* Panel de debug para monitorear notificaciones push */}
+      <PushDebugPanel />
     </div>
   );
 }
