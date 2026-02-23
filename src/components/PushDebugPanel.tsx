@@ -125,44 +125,7 @@ export default function PushDebugPanel() {
     }
   };
 
-  const testBackendNotification = async () => {
-    console.log('[Debug Panel] Solicitando notificación de prueba desde el backend...');
-    setIsLoading(true);
-    setTestMessage(null);
-    
-    try {
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
 
-      console.log('[Debug Panel] Enviando request a:', `${API_BASE}/api/notifications/test`);
-      const response = await fetch(`${API_BASE}/api/notifications/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      console.log('[Debug Panel] Response status:', response.status);
-      const data = await response.json();
-      console.log('[Debug Panel] Response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al enviar notificación de prueba');
-      }
-
-      console.log('[Debug Panel] ✅ Notificación enviada desde el backend');
-      setTestMessage(`✅ Backend: ${data.message || 'Notificación enviada'}`);
-      setTimeout(() => setTestMessage(null), 5000);
-    } catch (error: any) {
-      console.error('[Debug Panel] ❌ Error al solicitar notificación del backend:', error);
-      setTestMessage(`❌ Backend: ${error.message}`);
-      setTimeout(() => setTestMessage(null), 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const checkBackendSubscription = async () => {
     console.log('[Debug Panel] Verificando suscripción en el backend...');
@@ -300,6 +263,14 @@ export default function PushDebugPanel() {
         </div>
       )}
 
+      <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs">
+        <strong className="text-blue-800 dark:text-blue-200">ℹ️ Sobre las notificaciones:</strong>
+        <p className="text-blue-700 dark:text-blue-300 mt-1">
+          Las notificaciones se envían automáticamente por el cron job del backend a las horas programadas. 
+          Si estás suscrito correctamente, las recibirás cuando el sistema las envíe.
+        </p>
+      </div>
+
       <div className="mt-4 space-y-2">
         <button
           onClick={checkStatus}
@@ -315,14 +286,6 @@ export default function PushDebugPanel() {
           disabled={debugInfo.permission !== 'granted' || isLoading}
         >
           🧪 Probar Notificación Local
-        </button>
-        
-        <button
-          onClick={testBackendNotification}
-          className="w-full bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded font-semibold text-sm disabled:opacity-50"
-          disabled={!token || !debugInfo.hasActiveSubscription || isLoading}
-        >
-          {isLoading ? '⏳ Enviando...' : '🚀 Probar desde Backend'}
         </button>
         
         <button
