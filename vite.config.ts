@@ -8,13 +8,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
-      includeAssets: [
-        "favicon.svg",
-        "opcionA.png",
-        "OneSignalSDKWorker.js",
-        "OneSignalSDKUpdaterWorker.js",
-      ],
+      strategies: 'injectManifest',
+      srcDir: 'public',
+      filename: 'sw.js',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+      },
       manifest: {
         name: "Control de Gastos",
         short_name: "Gastos",
@@ -30,6 +29,10 @@ export default defineConfig({
           },
         ],
       },
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      }
     }),
   ],
 });
